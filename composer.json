@@ -9,7 +9,7 @@
     "fraudlabs pro"
   ],
   "homepage": "https://github.com/fraudlabspro/prestashop",
-  "license": "GPLv3",
+  "license": "GPL-3.0-or-later",
   "authors": [
     {
       "name": "FraudLabs Pro",
