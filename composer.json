@@ -1,0 +1,29 @@
+{
+  "name": "fraudlabspro/prestashop",
+  "version": "v1.13.0",
+  "description": "Enable FraudLabs Pro fraud prevention in PrestaShop.",
+  "type": "prestashop-module",
+  "keywords": [
+    "fraud",
+    "antifraud",
+    "fraudlabs pro"
+  ],
+  "homepage": "https://github.com/fraudlabspro/prestashop",
+  "license": "GPLv3",
+  "authors": [
+    {
+      "name": "FraudLabs Pro",
+      "email": "support@fraudlabspro.com"
+    }
+  ],
+  "require": {
+    "php": ">=5.6.0"
+  },
+  "support": {
+    "issues": "https://github.com/fraudlabspro/prestashop/issues",
+    "source": "https://github.com/fraudlabspro/prestashop"
+  },
+  "extra": {
+    "installer-name": "FraudLabsPro"
+  }
+}
