@@ -1,6 +1,6 @@
 <?php
 /**
- * 2012-2019 FraudLabs Pro.
+ * 2012-2020 FraudLabs Pro.
  *
  * NOTICE OF LICENSE
  *
@@ -18,12 +18,10 @@
  * versions in the future. If you wish to customize PrestaShop for your
  * needs please refer to http://www.prestashop.com for more information.
  *
- *  @author FraudLabs Pro
  *  @copyright FraudLabs Pro
  *  @license http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
  *  International Registered Trademark & Property of FraudLabs Pro
  */
-
 if (!defined('_PS_VERSION_')) {
 	exit;
 }
@@ -37,7 +35,7 @@ class fraudlabspro extends Module
 	{
 		$this->name = 'fraudlabspro';
 		$this->tab = 'payment_security';
-		$this->version = '1.13.0';
+		$this->version = '1.13.2';
 		$this->author = 'FraudLabs Pro';
 		$this->controllers = ['payment', 'validation'];
 		$this->module_key = 'cdb22a61c7ec8d1f900f6c162ad96caa';
@@ -171,7 +169,7 @@ class fraudlabspro extends Module
 			$quantity += $p['product_quantity'];
 		}
 
-		$ip = Db::getInstance()->getValue('SELECT `ip` FROM  `' . _DB_PREFIX_ . 'flp_order_ip` WHERE `id_cart` = "' . ((int) $params['order']->id_cart) . '"');
+		$ip = Db::getInstance()->getValue('SELECT `ip` FROM  `' . _DB_PREFIX_ . 'flp_order_ip` WHERE `id_cart` = "' . ((int) $params['cart']->id) . '"');
 		$ip = (!$ip) ? $this->getIP() : $ip;
 
 		$bill_state = '';
