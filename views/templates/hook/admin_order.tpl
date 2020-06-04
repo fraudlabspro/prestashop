@@ -1,5 +1,5 @@
 {*
-* 2012-2017 FraudLabs Pro
+* 2012-2020 FraudLabs Pro
 *
 * NOTICE OF LICENSE
 *
@@ -18,7 +18,7 @@
 * needs please refer to http://www.prestashop.com for more information.
 *
 *  @author FraudLabs Pro <support@fraudlabspro.com>
-*  @copyright  2012-2017 FraudLabs Pro
+*  @copyright  2012-2020 FraudLabs Pro
 *  @license    http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
 *  International Registered Trademark & Property of FraudLabs Pro
 *}
@@ -110,6 +110,10 @@
 				<td><strong>Device Blacklist</strong><div style="font-size:10px;color:#4b4b4b">Whether the client device is in our blacklist database.</div></td>
 				<td>{$is_device_blacklist}</td>
 				<td colspan="3">&nbsp;</td>
+			</tr>
+			<tr>
+				<td><strong>Triggered Rules</strong></td>
+				<td colspan="8">{$triggered_rules}</td>
 			</tr>
 			<tr>
 				<td><strong>Transaction ID</strong></td>
