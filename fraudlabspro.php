@@ -496,6 +496,7 @@ class fraudlabspro extends Module
 			'id'     => $id,
 			'note'   => $note,
 			'format' => 'json',
+			'source' => 'prestashop',
 		]), false, $stream_context);
 
 		return true;
