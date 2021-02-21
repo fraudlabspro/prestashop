@@ -1,6 +1,6 @@
 {
   "name": "fraudlabspro/prestashop",
-  "version": "v1.13.2",
+  "version": "v1.14.0",
   "description": "Enable FraudLabs Pro fraud prevention in PrestaShop.",
   "type": "prestashop-module",
   "keywords": [

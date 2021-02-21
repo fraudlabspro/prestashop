@@ -18,14 +18,14 @@
 * needs please refer to http://www.prestashop.com for more information.
 *
 *  @author FraudLabs Pro <support@fraudlabspro.com>
-*  @copyright  2012-2020 FraudLabs Pro
+*  @copyright  2012-2020 FraudLabs Prod
 *  @license    http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
 *  International Registered Trademark & Property of FraudLabs Pro
 *}
 
 <div class="panel">
 	<div class="panel-heading">
-		<img src="../modules/fraudlabspro/logo.png" height="16" width="16" /> FraudLabs Pro Result
+		<h3><img src="https://www.fraudlabspro.com/images/app-icon.png" height="24" width="24" align="absmiddle" /> FraudLabs Pro Result</h3>
 	</div>
 
 	{if $no_result}

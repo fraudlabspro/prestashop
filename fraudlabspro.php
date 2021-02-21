@@ -35,7 +35,7 @@ class fraudlabspro extends Module
 	{
 		$this->name = 'fraudlabspro';
 		$this->tab = 'payment_security';
-		$this->version = '1.13.3';
+		$this->version = '1.14.0';
 		$this->author = 'FraudLabs Pro';
 		$this->controllers = ['payment', 'validation'];
 		$this->module_key = 'cdb22a61c7ec8d1f900f6c162ad96caa';
@@ -407,6 +407,22 @@ class fraudlabspro extends Module
 					],
 					[
 						'type'   => 'checkbox',
+						'name'   => 'FLP_GET_FORWARDED_IP',
+						'values' => [
+							'query' => [
+								[
+									'id'   => 'on',
+									'name' => $this->l('Get forwarded IP address.'),
+									'val'  => '1',
+								],
+							],
+							'id'   => 'id',
+							'name' => 'name',
+						],
+						'desc' => $this->l('Enable this option if FraudLabs Pro cannot detect correct IP address in your order.'),
+					],
+					[
+						'type'   => 'checkbox',
 						'name'   => 'FLP_PURGE',
 						'values' => [
 							'query' => [
@@ -451,12 +467,13 @@ class fraudlabspro extends Module
 	public function getConfigFieldsValues()
 	{
 		return [
-			'FLP_ENABLED_on'        => Tools::getValue('FLP_ENABLED_on', Configuration::get('FLP_ENABLED')),
-			'FLP_LICENSE_KEY'       => Tools::getValue('FLP_LICENSE_KEY', Configuration::get('FLP_LICENSE_KEY')),
-			'FLP_APPROVE_STATUS_ID' => Tools::getValue('FLP_APPROVE_STATUS_ID', Configuration::get('FLP_APPROVE_STATUS_ID')),
-			'FLP_REVIEW_STATUS_ID'  => Tools::getValue('FLP_REVIEW_STATUS_ID', Configuration::get('FLP_REVIEW_STATUS_ID')),
-			'FLP_REJECT_STATUS_ID'  => Tools::getValue('FLP_REJECT_STATUS_ID', Configuration::get('FLP_REJECT_STATUS_ID')),
-			'FLP_PURGE_on'          => Tools::getValue('FLP_PURGE_on', Configuration::get('FLP_PURGE')),
+			'FLP_ENABLED_on'          => Tools::getValue('FLP_ENABLED_on', Configuration::get('FLP_ENABLED')),
+			'FLP_LICENSE_KEY'         => Tools::getValue('FLP_LICENSE_KEY', Configuration::get('FLP_LICENSE_KEY')),
+			'FLP_APPROVE_STATUS_ID'   => Tools::getValue('FLP_APPROVE_STATUS_ID', Configuration::get('FLP_APPROVE_STATUS_ID')),
+			'FLP_REVIEW_STATUS_ID'    => Tools::getValue('FLP_REVIEW_STATUS_ID', Configuration::get('FLP_REVIEW_STATUS_ID')),
+			'FLP_REJECT_STATUS_ID'    => Tools::getValue('FLP_REJECT_STATUS_ID', Configuration::get('FLP_REJECT_STATUS_ID')),
+			'FLP_GET_FORWARDED_IP_on' => Tools::getValue('FLP_GET_FORWARDED_IP_on', Configuration::get('FLP_GET_FORWARDED_IP')),
+			'FLP_PURGE_on'            => Tools::getValue('FLP_PURGE_on', Configuration::get('FLP_PURGE')),
 		];
 	}
 
@@ -468,12 +485,14 @@ class fraudlabspro extends Module
 			Configuration::updateValue('FLP_APPROVE_STATUS_ID', Tools::getValue('FLP_APPROVE_STATUS_ID'));
 			Configuration::updateValue('FLP_REVIEW_STATUS_ID', Tools::getValue('FLP_REVIEW_STATUS_ID'));
 			Configuration::updateValue('FLP_REJECT_STATUS_ID', Tools::getValue('FLP_REJECT_STATUS_ID'));
+			Configuration::updateValue('FLP_GET_FORWARDED_IP', Tools::getValue('FLP_GET_FORWARDED_IP_on'));
 
 			if (Tools::getValue('FLP_PURGE_on') == '1') {
 				Db::getInstance()->Execute('TRUNCATE TABLE `' . _DB_PREFIX_ . 'orders_fraudlabspro`');
 				$this->_html .= $this->displayConfirmation($this->l('FraudLabs Pro records cleared.'));
 			}
 		}
+
 		$this->_html .= $this->displayConfirmation($this->l('Settings updated'));
 	}
 
@@ -496,7 +515,6 @@ class fraudlabspro extends Module
 			'id'     => $id,
 			'note'   => $note,
 			'format' => 'json',
-			'source' => 'prestashop',
 		]), false, $stream_context);
 
 		return true;
@@ -505,20 +523,28 @@ class fraudlabspro extends Module
 	private function getIP()
 	{
 		// For development usage
-		/*if (isset($_SERVER['DEV_MODE'])) {
+		if (isset($_SERVER['DEV_MODE'])) {
 			do {
 				$ip = mt_rand(0, 255) . '.' . mt_rand(0, 255) . '.' . mt_rand(0, 255) . '.' . mt_rand(0, 255);
 			} while (!filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE));
 
 			return $ip;
-		}*/
+		}
 
-		$headers = [
-			'HTTP_CF_CONNECTING_IP', 'X-Real-IP', 'HTTP_X_FORWARDED_FOR', 'HTTP_INCAP_CLIENT_IP', 'HTTP_X_SUCURI_CLIENTIP',
-		];
+		if (Configuration::get('FLP_GET_FORWARDED_IP')) {
+			$headers = [
+				'HTTP_CF_CONNECTING_IP', 'X-Real-IP', 'HTTP_X_FORWARDED_FOR', 'HTTP_INCAP_CLIENT_IP', 'HTTP_X_SUCURI_CLIENTIP',
+			];
 
-		foreach ($headers as $header) {
-			if (isset($_SERVER[$header]) && filter_var($_SERVER[$header], FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
+			foreach ($headers as $header) {
+				if (!isset($_SERVER[$header])) {
+					continue;
+				}
+
+				if (!filter_var($_SERVER[$header], FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
+					continue;
+				}
+
 				return $_SERVER[$header];
 			}
 		}

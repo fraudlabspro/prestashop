@@ -6,7 +6,7 @@ Did I mention that you can use it for free? Yes, you can sign up for the [Free M
 
 ### Installation
 
-1. [Download](https://github.com/fraudlabspro/prestashop/archive/master.zip) **FraudLabs Pro** module zip file.
+1. Download [latest **FraudLabs Pro**](https://github.com/fraudlabspro/prestashop/releases/latest) module from release.
 2. Log into **PrestaShop Administrator** area.
 3. Click on the **MODULES** -> **Modules** menu.
 4. Click on the **Add a new module** menu.
