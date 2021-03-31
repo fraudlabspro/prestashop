@@ -84,14 +84,14 @@
 				<td colspan="6">&nbsp;</td>
 			</tr>
 			<tr>
-				<td><strong>High Risk Country</strong></td>
-				<td>{$is_high_risk_country}</td>
-				<td>&nbsp;</td>
 				<td><strong>Free Email</strong><div style="font-size:10px;color:#4b4b4b">Whether email is from free email provider.</div></td>
 				<td>{$is_free_email}</td>
 				<td>&nbsp;</td>
 				<td><strong>Ship Forward</strong><div style="font-size:10px;color:#4b4b4b">Whether shipping address is in database of known mail drops.</div></td>
 				<td>{$is_ship_forward}</td>
+				<td>&nbsp;</td>
+				<td>&nbsp;</td>
+				<td>&nbsp;</td>
 			</tr>
 			<tr>
 				<td><strong>Email Blacklist</strong><div style="font-size:10px;color:#4b4b4b">Whether the email address is in our blacklist database.</div></td>
