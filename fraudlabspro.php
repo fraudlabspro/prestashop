@@ -35,7 +35,7 @@ class fraudlabspro extends Module
 	{
 		$this->name = 'fraudlabspro';
 		$this->tab = 'payment_security';
-		$this->version = '1.14.0';
+		$this->version = '1.14.1';
 		$this->author = 'FraudLabs Pro';
 		$this->controllers = ['payment', 'validation'];
 		$this->module_key = 'cdb22a61c7ec8d1f900f6c162ad96caa';
@@ -106,6 +106,7 @@ class fraudlabspro extends Module
             `flp_credits` VARCHAR(10) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
             `api_key` CHAR(32) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
             `is_blacklisted` CHAR(1) NOT NULL DEFAULT \'0\' COLLATE \'utf8_bin\',
+            `is_phone_verified` VARCHAR(100) NOT NULL DEFAULT \'0\' COLLATE \'utf8_bin\',
             INDEX `id_order` (`id_order`)
         ) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8;');
 
@@ -280,6 +281,11 @@ class fraudlabspro extends Module
 				$row['flp_rules'] = '';
 			}
 
+			if (!isset($row['is_phone_verified'])) {
+				Db::getInstance()->Execute('ALTER TABLE `' . _DB_PREFIX_ . 'orders_fraudlabspro` ADD COLUMN `is_phone_verified` VARCHAR(100) NOT NULL DEFAULT "0" AFTER `api_key`;');
+				$row['is_phone_verified'] = 0;
+			}
+
 			$location = [$row['ip_continent'], $row['ip_country'], $row['ip_region'], $row['ip_city']];
 			$location = implode(', ', array_unique(array_diff($location, [''])));
 
@@ -324,6 +330,7 @@ class fraudlabspro extends Module
 				'is_ip_blacklist'            => ($row['is_ip_blacklist'] == 'Y') ? 'Yes' : (($row['is_ip_blacklist'] == 'N') ? 'No' : 'N/A'),
 				'is_device_blacklist'        => ($row['is_device_blacklist'] == 'Y') ? 'Yes' : (($row['is_device_blacklist'] == 'N') ? 'No' : 'N/A'),
 				'triggered_rules'            => $triggeredRules,
+				'is_phone_verified'          => ($row['is_phone_verified']) ? $row['is_phone_verified'] : 'No',
 				'transaction_id'             => $row['flp_id'],
 				'error_message'              => ($row['flp_message']) ? $row['flp_message'] : '(None)',
 				'show_approve_reject_button' => ($row['flp_status'] == 'REVIEW') ? true : false,

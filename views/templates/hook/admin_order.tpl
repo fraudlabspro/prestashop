@@ -109,7 +109,9 @@
 				<td>&nbsp;</td>
 				<td><strong>Device Blacklist</strong><div style="font-size:10px;color:#4b4b4b">Whether the client device is in our blacklist database.</div></td>
 				<td>{$is_device_blacklist}</td>
-				<td colspan="3">&nbsp;</td>
+				<td>&nbsp;</td>
+				<td><strong>Phone Verified</strong><div style="font-size:10px;color:#4b4b4b">Whether the phone number is verified by the client.</div></td>
+				<td>{$is_phone_verified}</td>
 			</tr>
 			<tr>
 				<td><strong>Triggered Rules</strong></td>
