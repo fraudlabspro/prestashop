@@ -419,14 +419,14 @@ class fraudlabspro extends Module
 							'query' => [
 								[
 									'id'   => 'on',
-									'name' => $this->l('Get forwarded IP address.'),
+									'name' => $this->l('Get X-Forwarded-For IP address.'),
 									'val'  => '1',
 								],
 							],
 							'id'   => 'id',
 							'name' => 'name',
 						],
-						'desc' => $this->l('Enable this option if FraudLabs Pro cannot detect correct IP address in your order.'),
+						'desc' => $this->l('Enable this option to get the original IP address behind the anonymous proxy.'),
 					],
 					[
 						'type'   => 'checkbox',
@@ -435,7 +435,7 @@ class fraudlabspro extends Module
 							'query' => [
 								[
 									'id'   => 'on',
-									'name' => $this->l('Enable this option only if you want to erase all FraudLabs Pro data. The data will be permanently erased upon clicking the SAVE button.'),
+									'name' => $this->l('Enable this option ONLY if you want to erase all FraudLabs Pro data. Caution: The data will be permanently erased upon clicking the SAVE button.'),
 									'val'  => '1',
 								],
 							],
