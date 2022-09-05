@@ -1,6 +1,6 @@
 <?php
 /**
- * 2012-2020 FraudLabs Pro.
+ * 2012-2022 FraudLabs Pro.
  *
  * NOTICE OF LICENSE
  *
@@ -35,7 +35,7 @@ class fraudlabspro extends Module
 	{
 		$this->name = 'fraudlabspro';
 		$this->tab = 'payment_security';
-		$this->version = '1.14.1';
+		$this->version = '1.15.0';
 		$this->author = 'FraudLabs Pro';
 		$this->controllers = ['payment', 'validation'];
 		$this->module_key = 'cdb22a61c7ec8d1f900f6c162ad96caa';
@@ -176,37 +176,38 @@ class fraudlabspro extends Module
 
 		$bill_state = '';
 
-		if ($address_invoice->id_state !== null or $address_invoice->id_state != '') {
+		if ($address_invoice->id_state !== null || $address_invoice->id_state != '') {
 			$State = new State((int) $address_invoice->id_state);
 			$bill_state = $State->iso_code;
 		}
 
 		$response = Tools::file_get_contents('https://api.fraudlabspro.com/v1/order/screen?' . http_build_query([
-			'key'            => Configuration::get('FLP_LICENSE_KEY'),
-			'ip'             => $ip,
-			'first_name'     => $address_invoice->firstname,
-			'last_name'      => $address_invoice->lastname,
-			'bill_city'      => $address_invoice->city,
-			'bill_state'     => $bill_state,
-			'bill_country'   => Country::getIsoById((int) $address_invoice->id_country),
-			'bill_zip_code'  => $address_invoice->postcode,
-			'email_domain'   => Tools::substr($customer->email, strpos($customer->email, '@') + 1),
-			'email_hash'     => $this->hastIt($customer->email),
-			'email'          => $customer->email,
-			'user_phone'     => $address_invoice->phone,
-			'ship_addr'      => trim($address_delivery->address1 . ' ' . $address_delivery->address2),
-			'ship_city'      => $address_delivery->city,
-			'ship_state'     => (Tools::getIsset($delivery_state->iso_code)) ? $delivery_state->iso_code : '',
-			'ship_zip_code'  => $address_delivery->postcode,
-			'ship_country'   => Country::getIsoById((int) $address_delivery->id_country),
-			'amount'         => $params['order']->total_paid,
-			'quantity'       => $quantity,
-			'currency'       => $default_currency->iso_code,
-			'user_order_id'  => $params['order']->id,
-			'flp_checksum'   => Context::getContext()->cookie->flp_checksum,
-			'format'         => 'json',
-			'source'         => 'prestashop',
-			'source_version' => $this->version,
+			'key'                => Configuration::get('FLP_LICENSE_KEY'),
+			'ip'                 => $ip,
+			'first_name'         => $address_invoice->firstname,
+			'last_name'          => $address_invoice->lastname,
+			'bill_city'          => $address_invoice->city,
+			'bill_state'         => $bill_state,
+			'bill_country'       => Country::getIsoById((int) $address_invoice->id_country),
+			'bill_zip_code'      => $address_invoice->postcode,
+			'email_domain'       => Tools::substr($customer->email, strpos($customer->email, '@') + 1),
+			'email_hash'         => $this->hastIt($customer->email),
+			'email'              => $customer->email,
+			'user_phone'         => $address_invoice->phone,
+			'ship_addr'          => trim($address_delivery->address1 . ' ' . $address_delivery->address2),
+			'ship_city'          => $address_delivery->city,
+			'ship_state'         => (Tools::getIsset($delivery_state->iso_code)) ? $delivery_state->iso_code : '',
+			'ship_zip_code'      => $address_delivery->postcode,
+			'ship_country'       => Country::getIsoById((int) $address_delivery->id_country),
+			'amount'             => $params['order']->total_paid,
+			'quantity'           => $quantity,
+			'currency'           => $default_currency->iso_code,
+			'user_order_id'      => $params['order']->id,
+			'device_fingerprint' => (isset($_COOKIE['flp.device'])) ? $_COOKIE['flp.device'] : '',
+			'flp_checksum'       => Context::getContext()->cookie->flp_checksum,
+			'format'             => 'json',
+			'source'             => 'prestashop',
+			'source_version'     => $this->version,
 		]), false, stream_context_create([
 			'http' => ['timeout' => 10],
 		]));
@@ -377,40 +378,40 @@ class fraudlabspro extends Module
 						'required' => true,
 					],
 					[
-							'type'     => 'select',
-							'label'    => $this->l('Approve Status'),
-							'name'     => 'FLP_APPROVE_STATUS_ID',
-							'required' => false,
-							'options'  => [
-								'query' => array_merge(['id_order_state' => 0], OrderState::getOrderStates((int) $this->context->language->id)),
-								'id'    => 'id_order_state',
-								'name'  => 'name',
-							],
-							'desc' => $this->l('Change order to this state if marked as Approve by FraudLabs Pro.'),
+						'type'     => 'select',
+						'label'    => $this->l('Approve Status'),
+						'name'     => 'FLP_APPROVE_STATUS_ID',
+						'required' => false,
+						'options'  => [
+							'query' => array_merge(['id_order_state' => 0], OrderState::getOrderStates((int) $this->context->language->id)),
+							'id'    => 'id_order_state',
+							'name'  => 'name',
+						],
+						'desc' => $this->l('Change order to this state if marked as Approve by FraudLabs Pro.'),
 					],
 					[
-							'type'     => 'select',
-							'label'    => $this->l('Review Status'),
-							'name'     => 'FLP_REVIEW_STATUS_ID',
-							'required' => false,
-							'options'  => [
-								'query' => array_merge(['id_order_state' => 0], OrderState::getOrderStates((int) $this->context->language->id)),
-								'id'    => 'id_order_state',
-								'name'  => 'name',
-							],
-							'desc' => $this->l('Change order to this state if marked as Review by FraudLabs Pro.'),
+						'type'     => 'select',
+						'label'    => $this->l('Review Status'),
+						'name'     => 'FLP_REVIEW_STATUS_ID',
+						'required' => false,
+						'options'  => [
+							'query' => array_merge(['id_order_state' => 0], OrderState::getOrderStates((int) $this->context->language->id)),
+							'id'    => 'id_order_state',
+							'name'  => 'name',
+						],
+						'desc' => $this->l('Change order to this state if marked as Review by FraudLabs Pro.'),
 					],
 					[
-							'type'     => 'select',
-							'label'    => $this->l('Reject Status'),
-							'name'     => 'FLP_REJECT_STATUS_ID',
-							'required' => false,
-							'options'  => [
-								'query' => array_merge(['id_order_state' => 0], OrderState::getOrderStates((int) $this->context->language->id)),
-								'id'    => 'id_order_state',
-								'name'  => 'name',
-							],
-							'desc' => $this->l('Change order to this state if marked as Reject by FraudLabs Pro.'),
+						'type'     => 'select',
+						'label'    => $this->l('Reject Status'),
+						'name'     => 'FLP_REJECT_STATUS_ID',
+						'required' => false,
+						'options'  => [
+							'query' => array_merge(['id_order_state' => 0], OrderState::getOrderStates((int) $this->context->language->id)),
+							'id'    => 'id_order_state',
+							'name'  => 'name',
+						],
+						'desc' => $this->l('Change order to this state if marked as Reject by FraudLabs Pro.'),
 					],
 					[
 						'type'   => 'checkbox',
@@ -455,7 +456,7 @@ class fraudlabspro extends Module
 		$helper->table = $this->table;
 		$lang = new Language((int) Configuration::get('PS_LANG_DEFAULT'));
 		$helper->default_form_language = $lang->id;
-		$helper->allow_employee_form_lang = Configuration::get('PS_BO_ALLOW_EMPLOYEE_FORM_LANG') ? Configuration::get('PS_BO_ALLOW_EMPLOYEE_FORM_LANG') : 0;
+		$helper->allow_employee_form_lang = Configuration::get('PS_BO_ALLOW_EMPLOYEE_FORM_LANG') ?: 0;
 		$this->fields_form = [];
 		$helper->id = (int) Tools::getValue('id_carrier');
 		$helper->identifier = $this->identifier;
@@ -533,7 +534,7 @@ class fraudlabspro extends Module
 		if (isset($_SERVER['DEV_MODE'])) {
 			do {
 				$ip = mt_rand(0, 255) . '.' . mt_rand(0, 255) . '.' . mt_rand(0, 255) . '.' . mt_rand(0, 255);
-			} while (!filter_var($ip, FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE));
+			} while (!filter_var($ip, \FILTER_VALIDATE_IP, \FILTER_FLAG_NO_PRIV_RANGE | \FILTER_FLAG_NO_RES_RANGE));
 
 			return $ip;
 		}
@@ -548,7 +549,7 @@ class fraudlabspro extends Module
 					continue;
 				}
 
-				if (!filter_var($_SERVER[$header], FILTER_VALIDATE_IP, FILTER_FLAG_NO_PRIV_RANGE | FILTER_FLAG_NO_RES_RANGE)) {
+				if (!filter_var($_SERVER[$header], \FILTER_VALIDATE_IP, \FILTER_FLAG_NO_PRIV_RANGE | \FILTER_FLAG_NO_RES_RANGE)) {
 					continue;
 				}
 
