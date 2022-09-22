@@ -35,7 +35,7 @@ class fraudlabspro extends Module
 	{
 		$this->name = 'fraudlabspro';
 		$this->tab = 'payment_security';
-		$this->version = '1.15.0';
+		$this->version = '1.15.1';
 		$this->author = 'FraudLabs Pro';
 		$this->controllers = ['payment', 'validation'];
 		$this->module_key = 'cdb22a61c7ec8d1f900f6c162ad96caa';
@@ -203,7 +203,7 @@ class fraudlabspro extends Module
 			'quantity'           => $quantity,
 			'currency'           => $default_currency->iso_code,
 			'user_order_id'      => $params['order']->id,
-			'device_fingerprint' => (isset($_COOKIE['flp.device'])) ? $_COOKIE['flp.device'] : '',
+			'device_fingerprint' => (isset($_COOKIE['flp_device'])) ? $_COOKIE['flp_device'] : '',
 			'flp_checksum'       => Context::getContext()->cookie->flp_checksum,
 			'format'             => 'json',
 			'source'             => 'prestashop',
