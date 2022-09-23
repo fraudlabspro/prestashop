@@ -203,7 +203,6 @@ class fraudlabspro extends Module
 			'quantity'           => $quantity,
 			'currency'           => $default_currency->iso_code,
 			'user_order_id'      => $params['order']->id,
-			'device_fingerprint' => (isset($_COOKIE['flp_device'])) ? $_COOKIE['flp_device'] : '',
 			'flp_checksum'       => Context::getContext()->cookie->flp_checksum,
 			'format'             => 'json',
 			'source'             => 'prestashop',

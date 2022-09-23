@@ -1,5 +1,5 @@
 {*
-* 2012-2017 FraudLabs Pro
+* 2012-2022 FraudLabs Pro
 *
 * NOTICE OF LICENSE
 *
@@ -23,10 +23,16 @@
 *  International Registered Trademark & Property of FraudLabs Pro
 *}
 
-<script src="https://cdn.fraudlabspro.com/v3-agent.min.js"></script>
-<script>
-var agent = new FraudLabsProAgent3();
-window.onload = function() {
-	agent.resolve(function(){});
-};
+<script type="text/javascript">
+(function(){
+	function s() {
+		var e = document.createElement('script');
+		e.type = 'text/javascript';
+		e.async = true;
+		e.src = ('https:' === document.location.protocol ? 'https://' : 'http://') + 'cdn.fraudlabspro.com/s.js';
+		var s = document.getElementsByTagName('script')[0];
+		s.parentNode.insertBefore(e, s);
+	}
+	(window.attachEvent) ? window.attachEvent('onload', s) : window.addEventListener('load', s, false);
+})();
 </script>
