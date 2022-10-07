@@ -35,7 +35,7 @@ class fraudlabspro extends Module
 	{
 		$this->name = 'fraudlabspro';
 		$this->tab = 'payment_security';
-		$this->version = '1.15.1';
+		$this->version = '1.16.0';
 		$this->author = 'FraudLabs Pro';
 		$this->controllers = ['payment', 'validation'];
 		$this->module_key = 'cdb22a61c7ec8d1f900f6c162ad96caa';
@@ -165,10 +165,17 @@ class fraudlabspro extends Module
 
 		$product_list = $params['order']->getProductsDetail();
 
+		file_put_contents('product.txt', print_r($product_list, true));
+		file_put_contents('order.txt', print_r($params, true));
+
 		$quantity = 0;
+
+		$items = [];
 
 		foreach ($product_list as $p) {
 			$quantity += $p['product_quantity'];
+
+			$items[] = $p['reference'] . ':' . $p['product_quantity'] . ':' . (($p['is_virtual'] == '1') ? 'virtual' : (($p['download_hash']) ? 'downloadable' : 'physical'));
 		}
 
 		$ip = Db::getInstance()->getValue('SELECT `ip` FROM  `' . _DB_PREFIX_ . 'flp_order_ip` WHERE `id_cart` = "' . ((int) $params['cart']->id) . '"');
@@ -203,6 +210,8 @@ class fraudlabspro extends Module
 			'quantity'           => $quantity,
 			'currency'           => $default_currency->iso_code,
 			'user_order_id'      => $params['order']->id,
+			'payment_gateway'    => $params['order']->payment,
+			'items'              => implode(',', $items),
 			'flp_checksum'       => Context::getContext()->cookie->flp_checksum,
 			'format'             => 'json',
 			'source'             => 'prestashop',
