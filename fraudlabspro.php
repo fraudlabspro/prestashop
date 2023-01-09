@@ -1,55 +1,72 @@
 <?php
-/**
- * 2012-2022 FraudLabs Pro.
- *
- * NOTICE OF LICENSE
- *
- * This source file is subject to the Academic Free License (AFL 3.0)
- * that is bundled with this package in the file LICENSE.txt.
- * It is also available through the world-wide-web at this URL:
- * http://opensource.org/licenses/afl-3.0.php
- * If you did not receive a copy of the license and are unable to
- * obtain it through the world-wide-web, please send an email
- * to license@prestashop.com so we can send you a copy immediately.
- *
- * DISCLAIMER
- *
- * Do not edit or add to this file if you wish to upgrade PrestaShop to newer
- * versions in the future. If you wish to customize PrestaShop for your
- * needs please refer to http://www.prestashop.com for more information.
- *
- *  @copyright FraudLabs Pro
- *  @license http://opensource.org/licenses/afl-3.0.php  Academic Free License (AFL 3.0)
- *  International Registered Trademark & Property of FraudLabs Pro
- */
+
 if (!defined('_PS_VERSION_')) {
 	exit;
 }
 
-class fraudlabspro extends Module
+require 'vendor/autoload.php';
+
+class Fraudlabspro extends Module
 {
 	protected $_html = '';
 	protected $_postErrors = [];
+
+	/**
+	 * @var ServiceContainer
+	 */
+	private $container;
 
 	public function __construct()
 	{
 		$this->name = 'fraudlabspro';
 		$this->tab = 'payment_security';
-		$this->version = '1.16.0';
+		$this->version = '1.17.0';
 		$this->author = 'FraudLabs Pro';
-		$this->controllers = ['payment', 'validation'];
-		$this->module_key = 'cdb22a61c7ec8d1f900f6c162ad96caa';
+		$this->emailSupport = 'support@fraudlabspro.com';
+		$this->need_instance = 0;
 
+		$this->ps_versions_compliancy = [
+			'min' => '1.6.1.0',
+			'max' => _PS_VERSION_,
+		];
 		$this->bootstrap = true;
+
 		parent::__construct();
 
 		$this->displayName = $this->l('FraudLabs Pro Fraud Prevention');
 		$this->description = $this->l('FraudLabs Pro screens transaction for online frauds to protect your store from fraud attempts.');
+
+		$this->confirmUninstall = $this->l('Are you sure to uninstall this module?');
+
+		$this->uri_path = Tools::substr($this->context->link->getBaseLink(null, null, true), 0, -1);
+		$this->images_dir = $this->uri_path . $this->getPathUri() . 'views/img/';
+		$this->template_dir = $this->getLocalPath() . 'views/templates/admin/';
+
+		if ($this->container === null) {
+			$this->container = new \PrestaShop\ModuleLibServiceContainer\DependencyInjection\ServiceContainer(
+				$this->name,
+				$this->getLocalPath()
+			);
+		}
+
+		// $this->controllers = ['payment', 'validation'];
+	}
+
+	/**
+	 * Retrieve service.
+	 *
+	 * @param string $serviceName
+	 *
+	 * @return mixed
+	 */
+	public function getService($serviceName)
+	{
+		return $this->container->getService($serviceName);
 	}
 
 	public function install()
 	{
-		if (!parent::install() || !$this->registerHook('newOrder') || !$this->registerHook('adminOrder') || !$this->registerHook('cart') || !$this->registerHook('footer')) {
+		if (!parent::install() || !$this->registerHook('newOrder') || !$this->registerHook('adminOrder') || !$this->registerHook('cart') || !$this->registerHook('footer') || !$this->getService('ps_accounts.installer')->install()) {
 			return false;
 		}
 
@@ -119,24 +136,62 @@ class fraudlabspro extends Module
 		return true;
 	}
 
+	public function uninstall()
+	{
+		if (!parent::uninstall()) {
+			return false;
+		}
+
+		return true;
+	}
+
 	public function getContent()
 	{
+		// Allow to auto-install Account
+		$accountsInstaller = $this->getService('ps_accounts.installer');
+		$accountsInstaller->install();
+
+		try {
+			// Account
+			$accountsFacade = $this->getService('ps_accounts.facade');
+			$accountsService = $accountsFacade->getPsAccountsService();
+			Media::addJsDef([
+				'contextPsAccounts' => $accountsFacade->getPsAccountsPresenter()
+					->present($this->name),
+			]);
+
+			// Retrieve Account CDN
+			$this->context->smarty->assign('urlAccountsVueCdn', $accountsService->getAccountsVueCdn());
+
+			$billingFacade = $this->getService('ps_billings.facade');
+			$partnerLogo = $this->getLocalPath() . 'views/img/logo.png';
+
+			// Billing
+			Media::addJsDef($billingFacade->present([
+				'logo'         => $partnerLogo,
+				'tosLink'      => 'https://www.fraudlabspro.com/terms-of-service',
+				'privacyLink'  => 'https://www.fraudlabspro.com/privacy-policy',
+				'emailSupport' => $this->emailSupport,
+			]));
+
+			$this->context->smarty->assign('pathVendor', $this->getPathUri() . 'views/js/chunk-vendors-fraudlabspro.' . $this->version . '.js');
+			$this->context->smarty->assign('pathApp', $this->getPathUri() . 'views/js/app-fraudlabspro.' . $this->version . '.js');
+		} catch (Exception $e) {
+			$this->context->controller->errors[] = $e->getMessage();
+
+			return '';
+		}
+
+		$this->context->smarty->assign('fraudlabsproConfiguration', $this->renderForm());
+
 		if (Tools::isSubmit('btnSubmit')) {
 			$this->_postValidation();
 			if (!count($this->_postErrors)) {
 				$this->_postProcess();
-			} else {
-				foreach ($this->_postErrors as $err) {
-					$this->_html .= $this->displayError($err);
-				}
 			}
-		} else {
-			$this->_html .= '<br />';
 		}
 
-		$this->_html .= $this->renderForm();
-
-		return $this->_html;
+		return $this->context->smarty->fetch($this->template_dir . 'fraudlabspro.tpl');
 	}
 
 	public function hookCart($params)
@@ -578,3 +633,5 @@ class fraudlabspro extends Module
 		return $hash;
 	}
 }
+
+

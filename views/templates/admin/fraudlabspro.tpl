@@ -1,5 +1,4 @@
-<?php
-/**
+{**
  * Copyright since 2007 PrestaShop SA and Contributors
  * PrestaShop is an International Registered Trademark & Property of PrestaShop SA
  *
@@ -16,13 +15,20 @@
  * @author    PrestaShop SA and Contributors <contact@prestashop.com>
  * @copyright Since 2007 PrestaShop SA and Contributors
  * @license   https://opensource.org/licenses/AFL-3.0 Academic Free License version 3.0
- */
-header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
-header('Last-Modified: ' . gmdate('D, d M Y H:i:s') . ' GMT');
+ *}
 
-header('Cache-Control: no-store, no-cache, must-revalidate');
-header('Cache-Control: post-check=0, pre-check=0', false);
-header('Pragma: no-cache');
+<link href="{$pathVendor|escape:'htmlall':'UTF-8'}" rel=preload as=script>
+<link href="{$pathApp|escape:'htmlall':'UTF-8'}" rel=preload as=script>
+<link href="{$urlAccountsVueCdn|escape:'htmlall':'UTF-8'}" rel=preload as=script>
 
-header('Location: ../');
-exit;
+<div id="app"></div>
+<script src="{$pathVendor|escape:'htmlall':'UTF-8'}"></script>
+<script src="{$pathApp|escape:'htmlall':'UTF-8'}"></script>
+<script src="{$urlAccountsVueCdn|escape:'htmlall':'UTF-8'}" type="text/javascript"></script>
+
+<style>
+  /** Hide native multistore module activation panel, because of visual regressions on non-bootstrap content */
+  #content.nobootstrap div.bootstrap.panel {
+    display: none;
+  }
+</style>
