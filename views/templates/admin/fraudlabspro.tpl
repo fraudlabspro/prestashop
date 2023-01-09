@@ -32,3 +32,7 @@
     display: none;
   }
 </style>
+
+<div class="settings">
+  {$fraudlabsproConfiguration}
+</div>
