@@ -5,12 +5,12 @@
 </template>
 
 <script>
-import FraudLabsPro from "@/components/fraudlabspro.vue";
+import fraudlabspro from "@/components/fraudlabspro.vue";
 
 export default {
   name: 'App',
   components: {
-    FraudLabsPro
+    fraudlabspro
   },
   setup() {
     console.log('FraudLabs Pro initialized');
@@ -28,3 +28,4 @@ export default {
   margin-top: 60px;
 }
 </style>
+

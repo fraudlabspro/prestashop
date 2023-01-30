@@ -1,16 +1,14 @@
 {
   "name": "fraudlabspro-vue",
   "version": "1.17.0",
-  "description": "",
+  "description": "Screens transaction for online frauds to protect your store from fraud attempts.",
   "private": "true",
   "main": "index.js",
   "dependencies": {
-    "@prestashopcorp/billing-cdc": "0.0.34",
     "bootstrap-vue": "^2.23.1",
     "cross-env": "^7.0.3",
     "jquery": "^1.9.1",
     "postcss": "^8.4.20",
-    "prestashop_accounts_vue_components": "^4.2.5",
     "vue": "^3.2.45"
   },
   "scripts": {
@@ -19,10 +17,11 @@
     "build": "npm run build-skip-eslint --prefix ./apps",
     "zip-module": "npm run build-skip-eslint --prefix ./apps && node zip-module"
   },
-  "author": "support@prestashop.com",
-  "license": "AFL-3.0",
+  "author": "support@fraudlabspro.com",
+  "license": "MIT",
   "devDependencies": {
     "archiver": "^5.3.0",
     "cpy-cli": "^3.1.1"
   }
 }
+

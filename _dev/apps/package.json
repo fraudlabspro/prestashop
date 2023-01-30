@@ -2,8 +2,8 @@
   "name": "fraudlabspro",
   "version": "1.17.0",
   "private": true,
-  "author": "support@prestashop.com",
-  "license": "AFL-3.0",
+  "author": "support@pfraudlabspro.com",
+  "license": "MIT",
   "scripts": {
     "dev": "vue-cli-service build --no-clean --mode development --watch",
     "dev-skip-eslint": "vue-cli-service build --no-clean --mode development --watch --skip-plugins @vue/cli-plugin-eslint",
@@ -12,10 +12,11 @@
     "lint": "vue-cli-service lint"
   },
   "dependencies": {
-    "@prestashopcorp/billing-cdc": "^0.0.30",
+    "@prestashopcorp/billing-cdc": "0.0.30",
+    "bootstrap-vue": "^2.23.1",
     "core-js": "3.19.1 ",
     "prestakit": "1.2.3",
-    "prestashop_accounts_vue_components": "latest",
+    "prestashop_accounts_vue_components": "^4.2.6",
     "vue": "2.6.14",
     "vue-content-loader": "2.0.0 "
   },
