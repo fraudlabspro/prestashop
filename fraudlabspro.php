@@ -20,13 +20,14 @@ class Fraudlabspro extends Module
 	{
 		$this->name = 'fraudlabspro';
 		$this->tab = 'payment_security';
-		$this->version = '1.17.0';
+		$this->version = '2.0.0';
 		$this->author = 'FraudLabs Pro';
 		$this->emailSupport = 'support@fraudlabspro.com';
+		$this->module_key = 'cdb22a61c7ec8d1f900f6c162ad96caa';
 		$this->need_instance = 0;
 
 		$this->ps_versions_compliancy = [
-			'min' => '1.6.1.0',
+			'min' => '1.7.8.0',
 			'max' => _PS_VERSION_,
 		];
 		$this->bootstrap = true;
