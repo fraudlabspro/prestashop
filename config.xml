@@ -2,7 +2,7 @@
 <module>
     <name>fraudlabspro</name>
     <displayName><![CDATA[FraudLabs Pro Fraud Prevention]]></displayName>
-    <version><![CDATA[1.17.0]]></version>
+    <version><![CDATA[2.0.0]]></version>
     <description><![CDATA[FraudLabs Pro screens transaction for online frauds to protect your store from fraud attempts.]]></description>
     <author><![CDATA[FraudLabs Pro]]></author>
     <tab><![CDATA[payment_security]]></tab>
