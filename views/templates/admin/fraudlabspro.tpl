@@ -38,5 +38,5 @@
 </style>
 
 <div class="settings">
-  {$fraudlabsproConfiguration}
+  {$fraudlabsproConfiguration|escape:'htmlall':'UTF-8'}
 </div>
