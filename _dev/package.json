@@ -1,6 +1,6 @@
 {
   "name": "fraudlabspro-vue",
-  "version": "1.17.0",
+  "version": "2.0.0",
   "description": "Screens transaction for online frauds to protect your store from fraud attempts.",
   "private": "true",
   "main": "index.js",
@@ -24,4 +24,3 @@
     "cpy-cli": "^3.1.1"
   }
 }
-

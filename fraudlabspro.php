@@ -20,7 +20,7 @@
 *
 *  @author FraudLabs Pro <support@fraudlabspro.com>
 *  @copyright  2013-2023 FraudLabs Pro
-*  @license https://opensource.org/licenses/MIT (MIT)
+*  @license https://opensource.org/licenses/MIT
 */
 
 if (!defined('_PS_VERSION_')) {
@@ -206,14 +206,14 @@ class Fraudlabspro extends Module
 			return '';
 		}
 
-		$this->context->smarty->assign('fraudlabsproConfiguration', $this->renderForm());
-
 		if (Tools::isSubmit('btnSubmit')) {
-			$this->_postValidation();
+			$this->postValidation();
 			if (!count($this->_postErrors)) {
-				$this->_postProcess();
+				$this->postProcess();
 			}
 		}
+
+		$this->context->smarty->assign('fraudlabsproConfiguration', $this->_html . $this->renderForm());
 
 		return $this->context->smarty->fetch($this->template_dir . 'fraudlabspro.tpl');
 	}
@@ -244,17 +244,14 @@ class Fraudlabspro extends Module
 
 		$product_list = $params['order']->getProductsDetail();
 
-		file_put_contents('product.txt', print_r($product_list, true));
-		file_put_contents('order.txt', print_r($params, true));
-
 		$quantity = 0;
 
 		$items = [];
 
-		foreach ($product_list as $p) {
-			$quantity += $p['product_quantity'];
+		foreach ($product_list as $product) {
+			$quantity += $product['product_quantity'];
 
-			$items[] = $p['reference'] . ':' . $p['product_quantity'] . ':' . (($p['is_virtual'] == '1') ? 'virtual' : (($p['download_hash']) ? 'downloadable' : 'physical'));
+			$items[] = $product['reference'] . ':' . $product['product_quantity'] . ':' . (($product['is_virtual'] == '1') ? 'virtual' : (($product['download_hash']) ? 'downloadable' : 'physical'));
 		}
 
 		$ip = Db::getInstance()->getValue('SELECT `ip` FROM  `' . _DB_PREFIX_ . 'flp_order_ip` WHERE `id_cart` = "' . ((int) $params['cart']->id) . '"');
@@ -435,13 +432,13 @@ class Fraudlabspro extends Module
 
 	public function renderForm()
 	{
-		$fields_form = [
+		$form = [
 			'form' => [
 				'legend' => [
 					'title' => $this->l('Settings'),
 					'icon'  => 'icon-cog',
 				],
-				'input' => [
+				'input'  => [
 					[
 						'type'   => 'checkbox',
 						'name'   => 'FLP_ENABLED',
@@ -453,8 +450,8 @@ class Fraudlabspro extends Module
 									'val'  => '1',
 								],
 							],
-							'id'   => 'id',
-							'name' => 'name',
+							'id'    => 'id',
+							'name'  => 'name',
 						],
 					],
 					[
@@ -474,7 +471,7 @@ class Fraudlabspro extends Module
 							'id'    => 'id_order_state',
 							'name'  => 'name',
 						],
-						'desc' => $this->l('Change order to this state if marked as Approve by FraudLabs Pro.'),
+						'desc'     => $this->l('Change order to this state if marked as Approve by FraudLabs Pro.'),
 					],
 					[
 						'type'     => 'select',
@@ -486,7 +483,7 @@ class Fraudlabspro extends Module
 							'id'    => 'id_order_state',
 							'name'  => 'name',
 						],
-						'desc' => $this->l('Change order to this state if marked as Review by FraudLabs Pro.'),
+						'desc'     => $this->l('Change order to this state if marked as Review by FraudLabs Pro.'),
 					],
 					[
 						'type'     => 'select',
@@ -498,7 +495,7 @@ class Fraudlabspro extends Module
 							'id'    => 'id_order_state',
 							'name'  => 'name',
 						],
-						'desc' => $this->l('Change order to this state if marked as Reject by FraudLabs Pro.'),
+						'desc'     => $this->l('Change order to this state if marked as Reject by FraudLabs Pro.'),
 					],
 					[
 						'type'   => 'checkbox',
@@ -511,10 +508,10 @@ class Fraudlabspro extends Module
 									'val'  => '1',
 								],
 							],
-							'id'   => 'id',
-							'name' => 'name',
+							'id'    => 'id',
+							'name'  => 'name',
 						],
-						'desc' => $this->l('Enable this option to get the original IP address behind the anonymous proxy.'),
+						'desc'   => $this->l('Enable this option to get the original IP address behind the anonymous proxy.'),
 					],
 					[
 						'type'   => 'checkbox',
@@ -527,8 +524,8 @@ class Fraudlabspro extends Module
 									'val'  => '1',
 								],
 							],
-							'id'   => 'id',
-							'name' => 'name',
+							'id'    => 'id',
+							'name'  => 'name',
 						],
 					],
 				],
@@ -556,7 +553,7 @@ class Fraudlabspro extends Module
 			'id_language'  => $this->context->language->id,
 		];
 
-		return $helper->generateForm([$fields_form]);
+		return $helper->generateForm([$form]);
 	}
 
 	public function getConfigFieldsValues()
@@ -572,7 +569,7 @@ class Fraudlabspro extends Module
 		];
 	}
 
-	protected function _postProcess()
+	protected function postProcess()
 	{
 		if (Tools::isSubmit('btnSubmit')) {
 			Configuration::updateValue('FLP_ENABLED', Tools::getValue('FLP_ENABLED_on'));
@@ -591,7 +588,7 @@ class Fraudlabspro extends Module
 		$this->_html .= $this->displayConfirmation($this->l('Settings updated'));
 	}
 
-	protected function _postValidation()
+	protected function postValidation()
 	{
 		if (Tools::isSubmit('btnSubmit')) {
 			if (!Tools::getValue('FLP_LICENSE_KEY')) {
@@ -657,5 +654,3 @@ class Fraudlabspro extends Module
 		return $hash;
 	}
 }
-
-

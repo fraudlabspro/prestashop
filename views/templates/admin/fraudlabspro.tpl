@@ -19,7 +19,7 @@
  * @author FraudLabs Pro <support@fraudlabspro.com>
  * @copyright  2013-2023 FraudLabs Pro
  * @license https://opensource.org/licenses/MIT (MIT)
- *}
+*}
 
 <link href="{$pathVendor|escape:'htmlall':'UTF-8'}" rel=preload as=script>
 <link href="{$pathApp|escape:'htmlall':'UTF-8'}" rel=preload as=script>

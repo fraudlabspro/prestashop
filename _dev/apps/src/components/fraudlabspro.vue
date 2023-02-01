@@ -2,6 +2,7 @@
  <div class="pt-2">
     <section>
       <div class="p-0 m-auto tw-container">
+       <!--  <PsAccounts></PsAccounts> -->
        <prestashop-accounts></prestashop-accounts>
       </div>
 
@@ -22,9 +23,11 @@
       :onEventHook="eventHookHandler"
     />
 
-    <div v-if="sub && sub.id">
-      Display your configuration, only if customer have a subscription
-    </div>
+    <style v-if="sub && sub.id">
+    </style>
+    <style v-else>
+      .settings { display: none; }
+    </style>
   </div>
 </template>
 
@@ -39,6 +42,14 @@ import {
 export default {
   name: 'fraudlabspro',
   components: {
+    /*  PsAccounts: async () => {
+      let psAccounts = window?.psaccountsVue?.PsAccounts;
+      if (!psAccounts) {
+        console.log('Fallback to Account Vue component');
+        psAccounts = require('prestashop_accounts_vue_components').PsAccounts;
+      }
+      return psAccounts;
+    },  */
     PsBillingCustomer: CustomerComponent.driver('vue', Vue),
     PsBillingModal: ModalContainerComponent.driver('vue', Vue),
   },
