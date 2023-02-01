@@ -51,7 +51,7 @@ class Fraudlabspro extends Module
 
 		$this->ps_versions_compliancy = [
 			'min' => '1.7.8.0',
-			'max' => '8.99.99',
+			'max' => _PS_VERSION_,
 		];
 		$this->bootstrap = true;
 
