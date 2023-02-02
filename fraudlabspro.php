@@ -31,7 +31,6 @@ require 'vendor/autoload.php';
 
 class Fraudlabspro extends Module
 {
-	protected $_html = '';
 	protected $_postErrors = [];
 
 	/**
@@ -51,7 +50,7 @@ class Fraudlabspro extends Module
 
 		$this->ps_versions_compliancy = [
 			'min' => '1.7.8.0',
-			'max' => _PS_VERSION_,
+			'max' => '8.99.99',
 		];
 		$this->bootstrap = true;
 
@@ -72,8 +71,6 @@ class Fraudlabspro extends Module
 				$this->getLocalPath()
 			);
 		}
-
-		// $this->controllers = ['payment', 'validation'];
 	}
 
 	/**
@@ -95,7 +92,7 @@ class Fraudlabspro extends Module
 		}
 
 		Configuration::updateValue('FLP_ENABLED', '1');
-		Configuration::updateValue('FLP_LICENSE_KEY', '');
+		Configuration::updateValue('FLP_API_KEY', '');
 
 		Db::getInstance()->Execute('CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'orders_fraudlabspro` (
             `id_order` INT(10) UNSIGNED NOT NULL,
@@ -206,14 +203,52 @@ class Fraudlabspro extends Module
 			return '';
 		}
 
-		if (Tools::isSubmit('btnSubmit')) {
-			$this->postValidation();
-			if (!count($this->_postErrors)) {
-				$this->postProcess();
+		$apiKey = Tools::getValue('flp_api_key');
+
+		if (Tools::isSubmit('erase')) {
+			Db::getInstance()->Execute('TRUNCATE TABLE `' . _DB_PREFIX_ . 'orders_fraudlabspro`');
+			$this->context->smarty->assign('message_success', $this->displayConfirmation($this->trans(
+				'FraudLabs Pro records has been cleared.',
+				[],
+				'Modules.FraudLabsPro.Admin'
+			)));
+		}
+
+		if (Tools::isSubmit('save')) {
+			if (!preg_match('/^[A-Z0-9]{32}$/', Tools::getValue('api_key'))) {
+				$this->context->controller->errors[] = $this->trans(
+					'Invalid API key.',
+					[],
+					'Modules.FraudLabsPro.Admin'
+				);
+			}
+
+			if (!count($this->context->controller->errors)) {
+				Configuration::updateValue('FLP_IS_ENABLED', Tools::getValue('module_is_enabled'));
+				Configuration::updateValue('FLP_API_KEY', Tools::getValue('api_key'));
+				Configuration::updateValue('FLP_APPROVE_STAGE_ID', Tools::getValue('approve_stage_id'));
+				Configuration::updateValue('FLP_REVIEW_STAGE_ID', Tools::getValue('review_stage_id'));
+				Configuration::updateValue('FLP_REJECT_STAGE_ID', Tools::getValue('reject_stage_id'));
+				Configuration::updateValue('FLP_DETECT_FORWARDED_IP', Tools::getValue('detect_forwarded_ip'));
+
+				$this->context->smarty->assign('message_success', $this->displayConfirmation($this->trans(
+					'The settings has been updated.',
+					[],
+					'Modules.FraudLabsPro.Admin'
+				)));
 			}
 		}
 
-		$this->context->smarty->assign('fraudlabsproConfiguration', $this->_html . $this->renderForm());
+		$this->context->smarty->assign([
+			'current_url'                   => $this->context->link->getAdminLink('AdminModules') . '&configure=fraudlabspro&tab_module=front_office_features&module_name=fraudlabspro',
+			'module_is_enabled'             => Configuration::get('FLP_IS_ENABLED'),
+			'api_key'                       => Configuration::get('FLP_API_KEY'),
+			'approve_stage_id'              => Configuration::get('FLP_APPROVE_STAGE_ID'),
+			'review_stage_id'               => Configuration::get('FLP_REVIEW_STAGE_ID'),
+			'reject_stage_id'               => Configuration::get('FLP_REJECT_STAGE_ID'),
+			'detect_forwarded_ip'           => Configuration::get('FLP_DETECT_FORWARDED_IP'),
+			'order_stages'                  => OrderState::getOrderStates((int) $this->context->language->id),
+		]);
 
 		return $this->context->smarty->fetch($this->template_dir . 'fraudlabspro.tpl');
 	}
@@ -224,12 +259,12 @@ class Fraudlabspro extends Module
 			return;
 		}
 
-		Db::getInstance()->Execute('INSERT IGNORE INTO `' . _DB_PREFIX_ . 'flp_order_ip` VALUES(' . $params['cart']->id . ', "' . $this->getIP() . '")');
+		Db::getInstance()->Execute('INSERT IGNORE INTO `' . _DB_PREFIX_ . 'flp_order_ip` VALUES(' . $params['cart']->id . ', "' . $this->getClientIp() . '")');
 	}
 
 	public function hookNewOrder($params)
 	{
-		if (!Configuration::get('PS_SHOP_ENABLE') || !Configuration::get('FLP_LICENSE_KEY') || !Configuration::get('FLP_ENABLED')) {
+		if (!Configuration::get('PS_SHOP_ENABLE') || !Configuration::get('FLP_API_KEY') || !Configuration::get('FLP_ENABLED')) {
 			return;
 		}
 
@@ -255,7 +290,7 @@ class Fraudlabspro extends Module
 		}
 
 		$ip = Db::getInstance()->getValue('SELECT `ip` FROM  `' . _DB_PREFIX_ . 'flp_order_ip` WHERE `id_cart` = "' . ((int) $params['cart']->id) . '"');
-		$ip = (!$ip) ? $this->getIP() : $ip;
+		$ip = (!$ip) ? $this->getClientIp() : $ip;
 
 		$bill_state = '';
 
@@ -265,7 +300,7 @@ class Fraudlabspro extends Module
 		}
 
 		$response = Tools::file_get_contents('https://api.fraudlabspro.com/v1/order/screen?' . http_build_query([
-			'key'                => Configuration::get('FLP_LICENSE_KEY'),
+			'key'                => Configuration::get('FLP_API_KEY'),
 			'ip'                 => $ip,
 			'first_name'         => $address_invoice->firstname,
 			'last_name'          => $address_invoice->lastname,
@@ -298,29 +333,29 @@ class Fraudlabspro extends Module
 
 		if (($json = Tools::jsonDecode($response)) !== null) {
 			$data = [
-				$params['order']->id, $json->is_country_match, $json->is_high_risk_country, $json->distance_in_km, $json->distance_in_mile, $ip, $json->ip_country, $json->ip_continent, $json->ip_region, $json->ip_city, $json->ip_latitude, $json->ip_longitude, $json->ip_timezone, $json->ip_elevation, $json->ip_domain, $json->ip_mobile_mnc, $json->ip_mobile_mcc, $json->ip_mobile_brand, $json->ip_netspeed, $json->ip_isp_name, $json->ip_usage_type, $json->is_free_email, $json->is_new_domain_name, $json->is_proxy_ip_address, $json->is_bin_found, $json->is_bin_country_match, $json->is_bin_name_match, $json->is_bin_phone_match, $json->is_bin_prepaid, $json->is_address_ship_forward, $json->is_bill_ship_city_match, $json->is_bill_ship_state_match, $json->is_bill_ship_country_match, $json->is_bill_ship_postal_match, $json->is_ip_blacklist, $json->is_email_blacklist, $json->is_credit_card_blacklist, $json->is_device_blacklist, $json->is_user_blacklist, $json->fraudlabspro_score, $json->fraudlabspro_distribution, $json->fraudlabspro_status, $json->fraudlabspro_rules, $json->fraudlabspro_id, $json->fraudlabspro_error_code, $json->fraudlabspro_message, $json->fraudlabspro_credits, Configuration::get('FLP_LICENSE_KEY'),
+				$params['order']->id, $json->is_country_match, $json->is_high_risk_country, $json->distance_in_km, $json->distance_in_mile, $ip, $json->ip_country, $json->ip_continent, $json->ip_region, $json->ip_city, $json->ip_latitude, $json->ip_longitude, $json->ip_timezone, $json->ip_elevation, $json->ip_domain, $json->ip_mobile_mnc, $json->ip_mobile_mcc, $json->ip_mobile_brand, $json->ip_netspeed, $json->ip_isp_name, $json->ip_usage_type, $json->is_free_email, $json->is_new_domain_name, $json->is_proxy_ip_address, $json->is_bin_found, $json->is_bin_country_match, $json->is_bin_name_match, $json->is_bin_phone_match, $json->is_bin_prepaid, $json->is_address_ship_forward, $json->is_bill_ship_city_match, $json->is_bill_ship_state_match, $json->is_bill_ship_country_match, $json->is_bill_ship_postal_match, $json->is_ip_blacklist, $json->is_email_blacklist, $json->is_credit_card_blacklist, $json->is_device_blacklist, $json->is_user_blacklist, $json->fraudlabspro_score, $json->fraudlabspro_distribution, $json->fraudlabspro_status, $json->fraudlabspro_rules, $json->fraudlabspro_id, $json->fraudlabspro_error_code, $json->fraudlabspro_message, $json->fraudlabspro_credits, Configuration::get('FLP_API_KEY'),
 			];
 
 			Db::getInstance()->execute('INSERT INTO `' . _DB_PREFIX_ . 'orders_fraudlabspro` (`id_order`, `is_country_match`, `is_high_risk_country`, `distance_in_km`, `distance_in_mile`, `ip_address`, `ip_country`, `ip_continent`, `ip_region`, `ip_city`, `ip_latitude`, `ip_longitude`, `ip_timezone`, `ip_elevation`, `ip_domain`, `ip_mobile_mnc`, `ip_mobile_mcc`, `ip_mobile_brand`, `ip_netspeed`, `ip_isp_name`, `ip_usage_type`, `is_free_email`, `is_new_domain_name`, `is_proxy_ip_address`, `is_bin_found`, `is_bin_country_match`, `is_bin_name_match`, `is_bin_phone_match`, `is_bin_prepaid`, `is_address_ship_forward`, `is_bill_ship_city_match`, `is_bill_ship_state_match`, `is_bill_ship_country_match`, `is_bill_ship_postal_match`, `is_ip_blacklist`, `is_email_blacklist`, `is_credit_card_blacklist`, `is_device_blacklist`, `is_user_blacklist`, `flp_score`, `flp_distribution`, `flp_status`, `flp_rules`, `flp_id`, `flp_error_code`, `flp_message`, `flp_credits`, `api_key`) VALUES (\'' . implode('\', \'', $data) . '\')');
 
-			if (Configuration::get('FLP_APPROVE_STATUS_ID') && $json->fraudlabspro_status == 'APPROVE') {
+			if (Configuration::get('FLP_APPROVE_STAGE_ID') && $json->fraudlabspro_status == 'APPROVE') {
 				$history = new OrderHistory();
 				$history->id_order = $params['order']->id;
-				$history->changeIdOrderState((int) Configuration::get('FLP_APPROVE_STATUS_ID'), $params['order'], true);
+				$history->changeIdOrderState((int) Configuration::get('FLP_APPROVE_STAGE_ID'), $params['order'], true);
 				$history->add();
 			}
 
-			if (Configuration::get('FLP_REVIEW_STATUS_ID') && $json->fraudlabspro_status == 'REVIEW') {
+			if (Configuration::get('FLP_REVIEW_STAGE_ID') && $json->fraudlabspro_status == 'REVIEW') {
 				$history = new OrderHistory();
 				$history->id_order = $params['order']->id;
-				$history->changeIdOrderState((int) Configuration::get('FLP_REVIEW_STATUS_ID'), $params['order'], true);
+				$history->changeIdOrderState((int) Configuration::get('FLP_REVIEW_STAGE_ID'), $params['order'], true);
 				$history->add();
 			}
 
-			if (Configuration::get('FLP_REJECT_STATUS_ID') && $json->fraudlabspro_status == 'REJECT') {
+			if (Configuration::get('FLP_REJECT_STAGE_ID') && $json->fraudlabspro_status == 'REJECT') {
 				$history = new OrderHistory();
 				$history->id_order = $params['order']->id;
-				$history->changeIdOrderState((int) Configuration::get('FLP_REJECT_STATUS_ID'), $params['order'], true);
+				$history->changeIdOrderState((int) Configuration::get('FLP_REJECT_STAGE_ID'), $params['order'], true);
 				$history->add();
 			}
 
@@ -377,7 +412,7 @@ class Fraudlabspro extends Module
 			$triggeredRules = '';
 
 			$response = Tools::file_get_contents('https://api.fraudlabspro.com/v1/plan?' . http_build_query([
-				'key'    => Configuration::get('FLP_LICENSE_KEY'),
+				'key'    => Configuration::get('FLP_API_KEY'),
 				'format' => 'json',
 			]), false, stream_context_create([
 				'http' => ['timeout' => 10],
@@ -430,179 +465,12 @@ class Fraudlabspro extends Module
 		return $this->display(__FILE__, 'admin_order.tpl');
 	}
 
-	public function renderForm()
-	{
-		$form = [
-			'form' => [
-				'legend' => [
-					'title' => $this->l('Settings'),
-					'icon'  => 'icon-cog',
-				],
-				'input'  => [
-					[
-						'type'   => 'checkbox',
-						'name'   => 'FLP_ENABLED',
-						'values' => [
-							'query' => [
-								[
-									'id'   => 'on',
-									'name' => $this->l('Enable'),
-									'val'  => '1',
-								],
-							],
-							'id'    => 'id',
-							'name'  => 'name',
-						],
-					],
-					[
-						'type'     => 'text',
-						'label'    => $this->l('API Key'),
-						'name'     => 'FLP_LICENSE_KEY',
-						'desc'     => $this->l('Enter your FraudLabs Pro API key. You can register a free license key at http://www.fraudlabspro.com/sign-up if you do not have one.'),
-						'required' => true,
-					],
-					[
-						'type'     => 'select',
-						'label'    => $this->l('Approve Status'),
-						'name'     => 'FLP_APPROVE_STATUS_ID',
-						'required' => false,
-						'options'  => [
-							'query' => array_merge(['id_order_state' => 0], OrderState::getOrderStates((int) $this->context->language->id)),
-							'id'    => 'id_order_state',
-							'name'  => 'name',
-						],
-						'desc'     => $this->l('Change order to this state if marked as Approve by FraudLabs Pro.'),
-					],
-					[
-						'type'     => 'select',
-						'label'    => $this->l('Review Status'),
-						'name'     => 'FLP_REVIEW_STATUS_ID',
-						'required' => false,
-						'options'  => [
-							'query' => array_merge(['id_order_state' => 0], OrderState::getOrderStates((int) $this->context->language->id)),
-							'id'    => 'id_order_state',
-							'name'  => 'name',
-						],
-						'desc'     => $this->l('Change order to this state if marked as Review by FraudLabs Pro.'),
-					],
-					[
-						'type'     => 'select',
-						'label'    => $this->l('Reject Status'),
-						'name'     => 'FLP_REJECT_STATUS_ID',
-						'required' => false,
-						'options'  => [
-							'query' => array_merge(['id_order_state' => 0], OrderState::getOrderStates((int) $this->context->language->id)),
-							'id'    => 'id_order_state',
-							'name'  => 'name',
-						],
-						'desc'     => $this->l('Change order to this state if marked as Reject by FraudLabs Pro.'),
-					],
-					[
-						'type'   => 'checkbox',
-						'name'   => 'FLP_GET_FORWARDED_IP',
-						'values' => [
-							'query' => [
-								[
-									'id'   => 'on',
-									'name' => $this->l('Get X-Forwarded-For IP address.'),
-									'val'  => '1',
-								],
-							],
-							'id'    => 'id',
-							'name'  => 'name',
-						],
-						'desc'   => $this->l('Enable this option to get the original IP address behind the anonymous proxy.'),
-					],
-					[
-						'type'   => 'checkbox',
-						'name'   => 'FLP_PURGE',
-						'values' => [
-							'query' => [
-								[
-									'id'   => 'on',
-									'name' => $this->l('Enable this option ONLY if you want to erase all FraudLabs Pro data. Caution: The data will be permanently erased upon clicking the SAVE button.'),
-									'val'  => '1',
-								],
-							],
-							'id'    => 'id',
-							'name'  => 'name',
-						],
-					],
-				],
-				'submit' => [
-					'title' => $this->l('Save'),
-				],
-			],
-		];
-
-		$helper = new HelperForm();
-		$helper->show_toolbar = false;
-		$helper->table = $this->table;
-		$lang = new Language((int) Configuration::get('PS_LANG_DEFAULT'));
-		$helper->default_form_language = $lang->id;
-		$helper->allow_employee_form_lang = Configuration::get('PS_BO_ALLOW_EMPLOYEE_FORM_LANG') ?: 0;
-		$this->fields_form = [];
-		$helper->id = (int) Tools::getValue('id_carrier');
-		$helper->identifier = $this->identifier;
-		$helper->submit_action = 'btnSubmit';
-		$helper->currentIndex = $this->context->link->getAdminLink('AdminModules', false) . '&configure=' . $this->name . '&tab_module=' . $this->tab . '&module_name=' . $this->name;
-		$helper->token = Tools::getAdminTokenLite('AdminModules');
-		$helper->tpl_vars = [
-			'fields_value' => $this->getConfigFieldsValues(),
-			'languages'    => $this->context->controller->getLanguages(),
-			'id_language'  => $this->context->language->id,
-		];
-
-		return $helper->generateForm([$form]);
-	}
-
-	public function getConfigFieldsValues()
-	{
-		return [
-			'FLP_ENABLED_on'          => Tools::getValue('FLP_ENABLED_on', Configuration::get('FLP_ENABLED')),
-			'FLP_LICENSE_KEY'         => Tools::getValue('FLP_LICENSE_KEY', Configuration::get('FLP_LICENSE_KEY')),
-			'FLP_APPROVE_STATUS_ID'   => Tools::getValue('FLP_APPROVE_STATUS_ID', Configuration::get('FLP_APPROVE_STATUS_ID')),
-			'FLP_REVIEW_STATUS_ID'    => Tools::getValue('FLP_REVIEW_STATUS_ID', Configuration::get('FLP_REVIEW_STATUS_ID')),
-			'FLP_REJECT_STATUS_ID'    => Tools::getValue('FLP_REJECT_STATUS_ID', Configuration::get('FLP_REJECT_STATUS_ID')),
-			'FLP_GET_FORWARDED_IP_on' => Tools::getValue('FLP_GET_FORWARDED_IP_on', Configuration::get('FLP_GET_FORWARDED_IP')),
-			'FLP_PURGE_on'            => Tools::getValue('FLP_PURGE_on', Configuration::get('FLP_PURGE')),
-		];
-	}
-
-	protected function postProcess()
-	{
-		if (Tools::isSubmit('btnSubmit')) {
-			Configuration::updateValue('FLP_ENABLED', Tools::getValue('FLP_ENABLED_on'));
-			Configuration::updateValue('FLP_LICENSE_KEY', Tools::getValue('FLP_LICENSE_KEY'));
-			Configuration::updateValue('FLP_APPROVE_STATUS_ID', Tools::getValue('FLP_APPROVE_STATUS_ID'));
-			Configuration::updateValue('FLP_REVIEW_STATUS_ID', Tools::getValue('FLP_REVIEW_STATUS_ID'));
-			Configuration::updateValue('FLP_REJECT_STATUS_ID', Tools::getValue('FLP_REJECT_STATUS_ID'));
-			Configuration::updateValue('FLP_GET_FORWARDED_IP', Tools::getValue('FLP_GET_FORWARDED_IP_on'));
-
-			if (Tools::getValue('FLP_PURGE_on') == '1') {
-				Db::getInstance()->Execute('TRUNCATE TABLE `' . _DB_PREFIX_ . 'orders_fraudlabspro`');
-				$this->_html .= $this->displayConfirmation($this->l('FraudLabs Pro records cleared.'));
-			}
-		}
-
-		$this->_html .= $this->displayConfirmation($this->l('Settings updated'));
-	}
-
-	protected function postValidation()
-	{
-		if (Tools::isSubmit('btnSubmit')) {
-			if (!Tools::getValue('FLP_LICENSE_KEY')) {
-				$this->_postErrors[] = $this->l('FraudLabs Pro API key is required.');
-			}
-		}
-	}
-
 	private function feedback($action, $id, $note = '')
 	{
 		$stream_context = stream_context_create(['http' => ['timeout' => 10]]);
 
 		Tools::file_get_contents('https://api.fraudlabspro.com/v1/order/feedback?' . http_build_query([
-			'key'    => Configuration::get('FLP_LICENSE_KEY'),
+			'key'    => Configuration::get('FLP_API_KEY'),
 			'action' => $action,
 			'id'     => $id,
 			'note'   => $note,
@@ -612,7 +480,7 @@ class Fraudlabspro extends Module
 		return true;
 	}
 
-	private function getIP()
+	private function getClientIp()
 	{
 		// For development usage
 		if (isset($_SERVER['DEV_MODE'])) {

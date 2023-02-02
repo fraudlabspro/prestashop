@@ -21,9 +21,9 @@
  * @license https://opensource.org/licenses/MIT (MIT)
 *}
 
-<div class="panel">
+<div class="panel" style="margin-top:2em">
 	<div class="panel-heading">
-		<h3><img src="https://www.fraudlabspro.com/images/app-icon.png" height="24" width="24" align="absmiddle" /> FraudLabs Pro Result</h3>
+		<h2><img src="https://www.fraudlabspro.com/images/app-icon.png" height="24" width="24" align="absmiddle" /> FraudLabs Pro Result</h2>
 	</div>
 
 	{if $no_result}
@@ -45,7 +45,7 @@
 			<tr>
 				<td rowspan="10" valign="top" align="center" style="vertical-align:top">
 					<img src="https://fraudlabspro.hexa-soft.com/images/fraudscore/fraudlabsproscore{$fraud_score|escape:'htmlall':'UTF-8'}.png" width="110" height="86" border="0">
-					<p><span style="font-size:1.5em;font-weight:bold;color:#f00">{$fraud_status|escape:'htmlall':'UTF-8'}</span></p>
+					<p><span style="font-size:1.1em;font-weight:bold;color:#f00">{$fraud_status}</span></p>
 					<hr/>
 					<p><strong>Remaining Credits:</strong></p>
 					<p>{$remaining_credits|escape:'htmlall':'UTF-8'}</p>
@@ -113,7 +113,7 @@
 			</tr>
 			<tr>
 				<td><strong>Triggered Rules</strong></td>
-				<td colspan="8">{$triggered_rules|escape:'htmlall':'UTF-8'}</td>
+				<td colspan="8">{$triggered_rules}</td>
 			</tr>
 			<tr>
 				<td><strong>Transaction ID</strong></td>
