@@ -476,15 +476,6 @@ class Fraudlabspro extends Module
 
 	private function getClientIp()
 	{
-		// For development usage
-		if (isset($_SERVER['DEV_MODE'])) {
-			do {
-				$ip = mt_rand(0, 255) . '.' . mt_rand(0, 255) . '.' . mt_rand(0, 255) . '.' . mt_rand(0, 255);
-			} while (!filter_var($ip, \FILTER_VALIDATE_IP, \FILTER_FLAG_NO_PRIV_RANGE | \FILTER_FLAG_NO_RES_RANGE));
-
-			return $ip;
-		}
-
 		return $_SERVER['REMOTE_ADDR'];
 	}
 
