@@ -99,16 +99,6 @@
       </div>
     </div>
     <div class="form-group">
-      <label class="control-label col-md-3">{l s='Detect Forwarded IP' d='Modules.FraudLabsPro.Admin'}</label>
-      <div class="col-md-9">
-        <select name="detect_forwarded_ip" class="form-control">
-          <option value="0"{if !$detect_forwarded_ip} selected{/if}> No</option>
-          <option value="1"{if $detect_forwarded_ip} selected{/if}> Yes</option>
-        </select>
-        <p class="help-block">{l s='Get forwarded IP if PrestaShop is hosted behind reverse proxy server.' d='Modules.FraudLabsPro.Admin'}</p>
-      </div>
-    </div>
-    <div class="form-group">
       <label class="control-label col-md-3"></label>
       <div class="col-md-9">
         <button type="submit" name="erase" class="btn btn-danger" onclick="return confirm('Confirm to erase all FraudLabs Pro records?');">Erase All Data</button>

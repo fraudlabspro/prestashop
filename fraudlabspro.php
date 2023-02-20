@@ -225,7 +225,6 @@ class Fraudlabspro extends Module
 				Configuration::updateValue('FLP_APPROVE_STAGE_ID', Tools::getValue('approve_stage_id'));
 				Configuration::updateValue('FLP_REVIEW_STAGE_ID', Tools::getValue('review_stage_id'));
 				Configuration::updateValue('FLP_REJECT_STAGE_ID', Tools::getValue('reject_stage_id'));
-				Configuration::updateValue('FLP_DETECT_FORWARDED_IP', Tools::getValue('detect_forwarded_ip'));
 
 				$this->context->smarty->assign('message_success', 'The settings has been updated.');
 			}
@@ -238,7 +237,6 @@ class Fraudlabspro extends Module
 			'approve_stage_id'              => Configuration::get('FLP_APPROVE_STAGE_ID'),
 			'review_stage_id'               => Configuration::get('FLP_REVIEW_STAGE_ID'),
 			'reject_stage_id'               => Configuration::get('FLP_REJECT_STAGE_ID'),
-			'detect_forwarded_ip'           => Configuration::get('FLP_DETECT_FORWARDED_IP'),
 			'order_stages'                  => OrderState::getOrderStates((int) $this->context->language->id),
 		]);
 
@@ -251,7 +249,7 @@ class Fraudlabspro extends Module
 			return;
 		}
 
-		Db::getInstance()->Execute('INSERT IGNORE INTO `' . _DB_PREFIX_ . 'flp_order_ip` VALUES(' . (int) $params['cart']->id . ', "' . $this->getClientIp() . '")');
+		Db::getInstance()->Execute('INSERT IGNORE INTO `' . _DB_PREFIX_ . 'flp_order_ip` VALUES(' . (int) $params['cart']->id . ', "' . pSQL($this->getClientIp()) . '")');
 	}
 
 	public function hookNewOrder($params)
@@ -485,24 +483,6 @@ class Fraudlabspro extends Module
 			} while (!filter_var($ip, \FILTER_VALIDATE_IP, \FILTER_FLAG_NO_PRIV_RANGE | \FILTER_FLAG_NO_RES_RANGE));
 
 			return $ip;
-		}
-
-		if (Configuration::get('FLP_GET_FORWARDED_IP')) {
-			$headers = [
-				'HTTP_CF_CONNECTING_IP', 'X-Real-IP', 'HTTP_X_FORWARDED_FOR', 'HTTP_INCAP_CLIENT_IP', 'HTTP_X_SUCURI_CLIENTIP',
-			];
-
-			foreach ($headers as $header) {
-				if (!isset($_SERVER[$header])) {
-					continue;
-				}
-
-				if (!filter_var($_SERVER[$header], \FILTER_VALIDATE_IP, \FILTER_FLAG_NO_PRIV_RANGE | \FILTER_FLAG_NO_RES_RANGE)) {
-					continue;
-				}
-
-				return $_SERVER[$header];
-			}
 		}
 
 		return $_SERVER['REMOTE_ADDR'];

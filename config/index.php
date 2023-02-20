@@ -22,6 +22,11 @@
 *  @copyright  2013-2023 FraudLabs Pro
 *  @license https://opensource.org/licenses/MIT (MIT)
 */
+
+if (!defined('_PS_VERSION_')) {
+	exit;
+}
+
 header('Expires: Mon, 26 Jul 1997 05:00:00 GMT');
 header('Last-Modified: ' . gmdate('D, d M Y H:i:s') . ' GMT');
 
