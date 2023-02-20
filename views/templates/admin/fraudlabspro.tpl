@@ -25,7 +25,7 @@
 <link href="{$pathApp|escape:'htmlall':'UTF-8'}" rel=preload as=script>
 <link href="{$urlAccountsVueCdn|escape:'htmlall':'UTF-8'}" rel=preload as=script>
 
-{if isset($message_success)}{$message_success}{/if}
+{if isset($message_success)} <div class="bootstrap"> <div class="module_confirmation conf confirm alert alert-success"> <button type="button" class="close" data-dismiss="alert">&times;</button> {$message_success|escape:'htmlall':'UTF-8'} </div> </div> {/if}
 
 <div id="app"></div>
 <script src="{$pathVendor|escape:'htmlall':'UTF-8'}"></script>
@@ -68,7 +68,7 @@
         <select name="approve_stage_id" class="form-control">
           <option value="0"{if !$approve_stage_id} selected{/if}>{l s='Do not change' d='Modules.FraudLabsPro.Admin'}</option>
           {foreach from=$order_stages item=stage}
-            <option value="{$stage.id_order_state|escape:'htmlall':'UTF-8'}"{if $approve_stage_id == $stage.id_order_state} selected{/if}>{$stage.name}</option>
+            <option value="{$stage.id_order_state|escape:'htmlall':'UTF-8'}"{if $approve_stage_id == $stage.id_order_state} selected{/if}>{$stage.name|escape:'htmlall':'UTF-8'}</option>
           {/foreach}
         </select>
         <p class="help-block">{l s='Change order to this stage when transaction is approved by FraudLabs Pro.' d='Modules.FraudLabsPro.Admin'}</p>
@@ -80,7 +80,7 @@
         <select name="review_stage_id" class="form-control">
           <option value="0"{if !$review_stage_id} selected{/if}>{l s='Do not change' d='Modules.FraudLabsPro.Admin'}</option>
           {foreach from=$order_stages item=stage}
-            <option value="{$stage.id_order_state|escape:'htmlall':'UTF-8'}"{if $review_stage_id == $stage.id_order_state} selected{/if}>{$stage.name}</option>
+            <option value="{$stage.id_order_state|escape:'htmlall':'UTF-8'}"{if $review_stage_id == $stage.id_order_state} selected{/if}>{$stage.name|escape:'htmlall':'UTF-8'}</option>
           {/foreach}
         </select>
         <p class="help-block">{l s='Change order to this stage when transaction is marked as review by FraudLabs Pro.' d='Modules.FraudLabsPro.Admin'}</p>
@@ -92,7 +92,7 @@
         <select name="reject_stage_id" class="form-control">
           <option value="0"{if !$reject_stage_id} selected{/if}>{l s='Do not change' d='Modules.FraudLabsPro.Admin'}</option>
           {foreach from=$order_stages item=stage}
-            <option value="{$stage.id_order_state|escape:'htmlall':'UTF-8'}"{if $reject_stage_id == $stage.id_order_state} selected{/if}>{$stage.name}</option>
+            <option value="{$stage.id_order_state|escape:'htmlall':'UTF-8'}"{if $reject_stage_id == $stage.id_order_state} selected{/if}>{$stage.name|escape:'htmlall':'UTF-8'}</option>
           {/foreach}
         </select>
         <p class="help-block">{l s='Change order to this stage when transaction is rejected by FraudLabs Pro.' d='Modules.FraudLabsPro.Admin'}</p>

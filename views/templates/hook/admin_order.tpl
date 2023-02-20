@@ -45,7 +45,7 @@
 			<tr>
 				<td rowspan="10" valign="top" align="center" style="vertical-align:top">
 					<img src="https://fraudlabspro.hexa-soft.com/images/fraudscore/fraudlabsproscore{$fraud_score|escape:'htmlall':'UTF-8'}.png" width="110" height="86" border="0">
-					<p><span style="font-size:1.1em;font-weight:bold;color:#f00">{$fraud_status}</span></p>
+					<p><span style="font-size:1.5em;font-weight:bold;color:#{$color|escape:'htmlall':'UTF-8'}">{$fraud_status|escape:'htmlall':'UTF-8'}</span></p>
 					<hr/>
 					<p><strong>Remaining Credits:</strong></p>
 					<p>{$remaining_credits|escape:'htmlall':'UTF-8'}</p>
@@ -113,7 +113,13 @@
 			</tr>
 			<tr>
 				<td><strong>Triggered Rules</strong></td>
-				<td colspan="8">{$triggered_rules}</td>
+				<td colspan="8">
+				{if $show_upgrade}
+					<br><div class="alert alert-info">Available for <a href="https://www.fraudlabspro.com/pricing" target="_blank">Mini plan</a> onward. Please <a href="https://www.fraudlabspro.com/merchant/login" target="_blank">upgrade</a>.</div>
+				{else}
+					{$triggered_rules|escape:'htmlall':'UTF-8'}
+				{/if}
+				</td>
 			</tr>
 			<tr>
 				<td><strong>Transaction ID</strong></td>
@@ -135,7 +141,7 @@
 			<button class="btn btn-default" id="btn-blacklist" data-id="{$transaction_id|escape:'htmlall':'UTF-8'}">Blacklist Order</button>
 			{/if}
 		</div>
-		
+
 		<div class="clearfix"></div>
 	</p>
 	{/if}
@@ -159,7 +165,7 @@
 			e.preventDefault();
 
 			var reason = prompt('Please enter the reason(s) for blacklisting this order.', '');
-			
+
 			if(reason == null){
 				return;
 			}

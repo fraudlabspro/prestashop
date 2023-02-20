@@ -42,7 +42,7 @@ class Fraudlabspro extends Module
 	{
 		$this->name = 'fraudlabspro';
 		$this->tab = 'payment_security';
-		$this->version = '2.0.0';
+		$this->version = '2.0.1';
 		$this->author = 'FraudLabs Pro';
 		$this->emailSupport = 'support@fraudlabspro.com';
 		$this->module_key = 'cdb22a61c7ec8d1f900f6c162ad96caa';
@@ -207,11 +207,7 @@ class Fraudlabspro extends Module
 
 		if (Tools::isSubmit('erase')) {
 			Db::getInstance()->Execute('TRUNCATE TABLE `' . _DB_PREFIX_ . 'orders_fraudlabspro`');
-			$this->context->smarty->assign('message_success', $this->displayConfirmation($this->trans(
-				'FraudLabs Pro records has been cleared.',
-				[],
-				'Modules.FraudLabsPro.Admin'
-			)));
+			$this->context->smarty->assign('message_success', 'FraudLabs Pro records has been cleared.');
 		}
 
 		if (Tools::isSubmit('save')) {
@@ -231,11 +227,7 @@ class Fraudlabspro extends Module
 				Configuration::updateValue('FLP_REJECT_STAGE_ID', Tools::getValue('reject_stage_id'));
 				Configuration::updateValue('FLP_DETECT_FORWARDED_IP', Tools::getValue('detect_forwarded_ip'));
 
-				$this->context->smarty->assign('message_success', $this->displayConfirmation($this->trans(
-					'The settings has been updated.',
-					[],
-					'Modules.FraudLabsPro.Admin'
-				)));
+				$this->context->smarty->assign('message_success', 'The settings has been updated.');
 			}
 		}
 
@@ -259,7 +251,7 @@ class Fraudlabspro extends Module
 			return;
 		}
 
-		Db::getInstance()->Execute('INSERT IGNORE INTO `' . _DB_PREFIX_ . 'flp_order_ip` VALUES(' . $params['cart']->id . ', "' . $this->getClientIp() . '")');
+		Db::getInstance()->Execute('INSERT IGNORE INTO `' . _DB_PREFIX_ . 'flp_order_ip` VALUES(' . (int) $params['cart']->id . ', "' . $this->getClientIp() . '")');
 	}
 
 	public function hookNewOrder($params)
@@ -336,7 +328,7 @@ class Fraudlabspro extends Module
 				$params['order']->id, $json->is_country_match, $json->is_high_risk_country, $json->distance_in_km, $json->distance_in_mile, $ip, $json->ip_country, $json->ip_continent, $json->ip_region, $json->ip_city, $json->ip_latitude, $json->ip_longitude, $json->ip_timezone, $json->ip_elevation, $json->ip_domain, $json->ip_mobile_mnc, $json->ip_mobile_mcc, $json->ip_mobile_brand, $json->ip_netspeed, $json->ip_isp_name, $json->ip_usage_type, $json->is_free_email, $json->is_new_domain_name, $json->is_proxy_ip_address, $json->is_bin_found, $json->is_bin_country_match, $json->is_bin_name_match, $json->is_bin_phone_match, $json->is_bin_prepaid, $json->is_address_ship_forward, $json->is_bill_ship_city_match, $json->is_bill_ship_state_match, $json->is_bill_ship_country_match, $json->is_bill_ship_postal_match, $json->is_ip_blacklist, $json->is_email_blacklist, $json->is_credit_card_blacklist, $json->is_device_blacklist, $json->is_user_blacklist, $json->fraudlabspro_score, $json->fraudlabspro_distribution, $json->fraudlabspro_status, $json->fraudlabspro_rules, $json->fraudlabspro_id, $json->fraudlabspro_error_code, $json->fraudlabspro_message, $json->fraudlabspro_credits, Configuration::get('FLP_API_KEY'),
 			];
 
-			Db::getInstance()->execute('INSERT INTO `' . _DB_PREFIX_ . 'orders_fraudlabspro` (`id_order`, `is_country_match`, `is_high_risk_country`, `distance_in_km`, `distance_in_mile`, `ip_address`, `ip_country`, `ip_continent`, `ip_region`, `ip_city`, `ip_latitude`, `ip_longitude`, `ip_timezone`, `ip_elevation`, `ip_domain`, `ip_mobile_mnc`, `ip_mobile_mcc`, `ip_mobile_brand`, `ip_netspeed`, `ip_isp_name`, `ip_usage_type`, `is_free_email`, `is_new_domain_name`, `is_proxy_ip_address`, `is_bin_found`, `is_bin_country_match`, `is_bin_name_match`, `is_bin_phone_match`, `is_bin_prepaid`, `is_address_ship_forward`, `is_bill_ship_city_match`, `is_bill_ship_state_match`, `is_bill_ship_country_match`, `is_bill_ship_postal_match`, `is_ip_blacklist`, `is_email_blacklist`, `is_credit_card_blacklist`, `is_device_blacklist`, `is_user_blacklist`, `flp_score`, `flp_distribution`, `flp_status`, `flp_rules`, `flp_id`, `flp_error_code`, `flp_message`, `flp_credits`, `api_key`) VALUES (\'' . implode('\', \'', $data) . '\')');
+			Db::getInstance()->execute('INSERT INTO `' . _DB_PREFIX_ . 'orders_fraudlabspro` (`id_order`, `is_country_match`, `is_high_risk_country`, `distance_in_km`, `distance_in_mile`, `ip_address`, `ip_country`, `ip_continent`, `ip_region`, `ip_city`, `ip_latitude`, `ip_longitude`, `ip_timezone`, `ip_elevation`, `ip_domain`, `ip_mobile_mnc`, `ip_mobile_mcc`, `ip_mobile_brand`, `ip_netspeed`, `ip_isp_name`, `ip_usage_type`, `is_free_email`, `is_new_domain_name`, `is_proxy_ip_address`, `is_bin_found`, `is_bin_country_match`, `is_bin_name_match`, `is_bin_phone_match`, `is_bin_prepaid`, `is_address_ship_forward`, `is_bill_ship_city_match`, `is_bill_ship_state_match`, `is_bill_ship_country_match`, `is_bill_ship_postal_match`, `is_ip_blacklist`, `is_email_blacklist`, `is_credit_card_blacklist`, `is_device_blacklist`, `is_user_blacklist`, `flp_score`, `flp_distribution`, `flp_status`, `flp_rules`, `flp_id`, `flp_error_code`, `flp_message`, `flp_credits`, `api_key`) VALUES (\'' . implode('\', \'', array_map('pSQL', $data)) . '\')');
 
 			if (Configuration::get('FLP_APPROVE_STAGE_ID') && $json->fraudlabspro_status == 'APPROVE') {
 				$history = new OrderHistory();
@@ -418,9 +410,11 @@ class Fraudlabspro extends Module
 				'http' => ['timeout' => 10],
 			]));
 
+			$showUpgrade = false;
+
 			if (($json = Tools::jsonDecode($response)) !== null) {
 				if (preg_match('/Micro/', $json->plan_name)) {
-					$triggeredRules = '<br><div class="alert alert-info">Available for <a href="https://www.fraudlabspro.com/pricing" target="_blank">Mini plan</a> onward. Please <a href="https://www.fraudlabspro.com/merchant/login" target="_blank">upgrade</a>.</div>';
+					$showUpgrade = true;
 				} elseif (isset($row['flp_rules'])) {
 					$triggeredRules = $row['flp_rules'];
 				}
@@ -429,7 +423,8 @@ class Fraudlabspro extends Module
 			$this->smarty->assign([
 				'no_result'                  => false,
 				'fraud_score'                => $row['flp_score'],
-				'fraud_status'               => '<span style="font-size:1.5em;font-weight:bold;color:#' . (($row['flp_status'] == 'APPROVE') ? '339933' : (($row['flp_status'] == 'REVIEW') ? 'ff7f27' : 'f00')) . '">' . (($row['flp_status'] == 'APPROVE') ? 'APPROVED' : (($row['flp_status'] == 'REJECT') ? 'REJECTED' : $row['flp_status'])) . '</span>',
+				'color'                      => ($row['flp_status'] == 'APPROVE') ? '339933' : (($row['flp_status'] == 'REVIEW') ? 'ff7f27' : 'f00'),
+				'fraud_status'               => ($row['flp_status'] == 'APPROVE') ? 'APPROVED' : (($row['flp_status'] == 'REJECT') ? 'REJECTED' : $row['flp_status']),
 				'remaining_credits'          => number_format($row['flp_credits'], 0, '', ','),
 				'client_ip'                  => $row['ip_address'],
 				'location'                   => $location,
@@ -449,7 +444,8 @@ class Fraudlabspro extends Module
 				'is_bin_found'               => ($row['is_bin_found'] == 'Y') ? 'Yes' : (($row['is_bin_found'] == 'N') ? 'No' : 'N/A'),
 				'is_ip_blacklist'            => ($row['is_ip_blacklist'] == 'Y') ? 'Yes' : (($row['is_ip_blacklist'] == 'N') ? 'No' : 'N/A'),
 				'is_device_blacklist'        => ($row['is_device_blacklist'] == 'Y') ? 'Yes' : (($row['is_device_blacklist'] == 'N') ? 'No' : 'N/A'),
-				'triggered_rules'            => $triggeredRules,
+				'show_upgrade'               => $showUpgrade,
+				'triggered_rules'            => ($triggeredRules) ? $triggeredRules : '-',
 				'is_phone_verified'          => ($row['is_phone_verified']) ? $row['is_phone_verified'] : 'No',
 				'transaction_id'             => $row['flp_id'],
 				'error_message'              => ($row['flp_message']) ? $row['flp_message'] : '(None)',
