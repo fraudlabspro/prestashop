@@ -34,7 +34,7 @@ services:
     arguments:
       - '@ps_accounts.facade'
       - '@fraudlabspro.context'
-      - true # if true you are in sandbox mode, if false or empty not in sandbox
+      - false # if true you are in sandbox mode, if false or empty not in sandbox
 
   ps_billings.facade:
     class: 'PrestaShopCorp\Billing\Presenter\BillingPresenter'
