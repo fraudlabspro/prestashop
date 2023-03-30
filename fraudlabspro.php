@@ -42,7 +42,7 @@ class Fraudlabspro extends Module
 	{
 		$this->name = 'fraudlabspro';
 		$this->tab = 'payment_security';
-		$this->version = '2.0.1';
+		$this->version = '2.0.2';
 		$this->author = 'FraudLabs Pro';
 		$this->emailSupport = 'support@fraudlabspro.com';
 		$this->module_key = 'cdb22a61c7ec8d1f900f6c162ad96caa';

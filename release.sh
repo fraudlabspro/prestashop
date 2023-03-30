@@ -7,6 +7,7 @@ cp logo.png fraudlabspro/
 cp -r config fraudlabspro/
 cp -r vendor fraudlabspro/
 cp -r views fraudlabspro/
+cp index.php fraudlabspro/
 zip -q -r fraudlabspro.zip fraudlabspro/
 rm -rf fraudlabspro
 mv fraudlabspro.zip ../fraudlabspro-release.zip
