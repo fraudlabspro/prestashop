@@ -23,13 +23,15 @@
 *  @license https://opensource.org/licenses/MIT
 */
 
+use PrestaShop\PrestaShop\Core\Addon\Module\ModuleManagerBuilder;
+
 if (!defined('_PS_VERSION_')) {
 	exit;
 }
 
 require 'vendor/autoload.php';
 
-class Fraudlabspro extends Module
+class FraudLabsPro extends Module
 {
 	protected $_postErrors = [];
 
@@ -42,16 +44,12 @@ class Fraudlabspro extends Module
 	{
 		$this->name = 'fraudlabspro';
 		$this->tab = 'payment_security';
-		$this->version = '2.0.3';
+		$this->version = '2.1.0';
 		$this->author = 'FraudLabs Pro';
 		$this->emailSupport = 'support@fraudlabspro.com';
 		$this->module_key = 'cdb22a61c7ec8d1f900f6c162ad96caa';
 		$this->need_instance = 0;
-
-		$this->ps_versions_compliancy = [
-			'min' => '1.7.8.0',
-			'max' => '8.99.99',
-		];
+		$this->ps_versions_compliancy = ['min' => '1.7.0', 'max' => _PS_VERSION_];
 		$this->bootstrap = true;
 
 		parent::__construct();
@@ -73,135 +71,206 @@ class Fraudlabspro extends Module
 		}
 	}
 
+	public function install()
+	{
+		// Test if MBO is installed
+		// For more information, check the readme of mbo-lib-installer
+		$mboStatus = (new Prestashop\ModuleLibMboInstaller\Presenter())->present();
+
+		if (!$mboStatus['isInstalled']) {
+			try {
+				$mboInstaller = new Prestashop\ModuleLibMboInstaller\Installer(_PS_VERSION_);
+				/** @var bool */
+				$result = $mboInstaller->installModule();
+
+				// Call the installation of PrestaShop Integration Framework components
+				$this->installDependencies();
+
+				Configuration::updateValue('FLP_ENABLED', '1');
+				Configuration::updateValue('FLP_API_KEY', '');
+
+				Db::getInstance()->Execute('CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'orders_fraudlabspro` (
+					`id_order` INT(10) UNSIGNED NOT NULL,
+					`is_country_match` CHAR(2) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
+					`is_high_risk_country` CHAR(2) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
+					`distance_in_km` VARCHAR(10) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
+					`distance_in_mile` VARCHAR(10) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
+					`ip_address` VARCHAR(39) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
+					`ip_country` VARCHAR(2) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
+					`ip_continent` VARCHAR(20) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
+					`ip_region` VARCHAR(21) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
+					`ip_city` VARCHAR(21) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
+					`ip_latitude` VARCHAR(21) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
+					`ip_longitude` VARCHAR(21) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
+					`ip_timezone` VARCHAR(10) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
+					`ip_elevation` VARCHAR(10) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
+					`ip_domain` VARCHAR(50) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
+					`ip_mobile_mnc` VARCHAR(100) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
+					`ip_mobile_mcc` VARCHAR(100) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
+					`ip_mobile_brand` VARCHAR(100) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
+					`ip_netspeed` VARCHAR(10) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
+					`ip_isp_name` VARCHAR(50) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
+					`ip_usage_type` VARCHAR(30) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
+					`is_free_email` CHAR(2) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
+					`is_new_domain_name` CHAR(2) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
+					`is_proxy_ip_address` CHAR(2) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
+					`is_bin_found` CHAR(2) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
+					`is_bin_country_match` CHAR(2) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
+					`is_bin_name_match` CHAR(2) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
+					`is_bin_phone_match` CHAR(2) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
+					`is_bin_prepaid` CHAR(2) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
+					`is_address_ship_forward` CHAR(2) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
+					`is_bill_ship_city_match` CHAR(2) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
+					`is_bill_ship_state_match` CHAR(2) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
+					`is_bill_ship_country_match` CHAR(2) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
+					`is_bill_ship_postal_match` CHAR(2) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
+					`is_ip_blacklist` CHAR(2) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
+					`is_email_blacklist` CHAR(2) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
+					`is_credit_card_blacklist` CHAR(2) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
+					`is_device_blacklist` CHAR(2) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
+					`is_user_blacklist` CHAR(2) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
+					`flp_score` CHAR(3) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
+					`flp_distribution` CHAR(3) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
+					`flp_status` CHAR(10) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
+					`flp_rules` VARCHAR(255) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
+					`flp_id` CHAR(15) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
+					`flp_error_code` CHAR(3) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
+					`flp_message` VARCHAR(50) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
+					`flp_credits` VARCHAR(10) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
+					`api_key` CHAR(32) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
+					`is_blacklisted` CHAR(1) NOT NULL DEFAULT \'0\' COLLATE \'utf8_bin\',
+					`is_phone_verified` VARCHAR(100) NOT NULL DEFAULT \'0\' COLLATE \'utf8_bin\',
+					INDEX `id_order` (`id_order`)
+				) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8;');
+
+				Db::getInstance()->Execute('CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'flp_order_ip` (
+					`id_cart` INT NOT NULL,
+					`ip` VARCHAR(39) NOT NULL,
+					PRIMARY KEY (`id_cart`)
+				) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8;');
+
+				$this->registerHook('newOrder');
+				$this->registerHook('adminOrder');
+				$this->registerHook('cart');
+				$this->registerHook('footer');
+			} catch (\Exception $e) {
+				// Some errors can happen, i.e during initialization or download of the module
+				$this->context->controller->errors[] = $e->getMessage();
+
+				return 'Error during MBO installation';
+			}
+		} else {
+			$this->installDependencies();
+		}
+
+		return parent::install();
+	}
+
+	/**
+	 * Install PrestaShop Integration Framework Components.
+	 */
+	public function installDependencies()
+	{
+		$moduleManager = ModuleManagerBuilder::getInstance()->build();
+
+		/* PS Account */
+		if (!$moduleManager->isInstalled('ps_accounts')) {
+			$moduleManager->install('ps_accounts');
+		} elseif (!$moduleManager->isEnabled('ps_accounts')) {
+			$moduleManager->enable('ps_accounts');
+			$moduleManager->upgrade('ps_accounts');
+		} else {
+			$moduleManager->upgrade('ps_accounts');
+		}
+
+		/* Cloud Sync - PS Eventbus */
+		if (!$moduleManager->isInstalled('ps_eventbus')) {
+			$moduleManager->install('ps_eventbus');
+		} elseif (!$moduleManager->isEnabled('ps_eventbus')) {
+			$moduleManager->enable('ps_eventbus');
+			$moduleManager->upgrade('ps_eventbus');
+		} else {
+			$moduleManager->upgrade('ps_eventbus');
+		}
+	}
+
+	public function uninstall()
+	{
+		return parent::uninstall();
+	}
+
 	/**
 	 * Retrieve service.
 	 *
 	 * @param string $serviceName
-	 *
-	 * @return mixed
 	 */
 	public function getService($serviceName)
 	{
 		return $this->container->getService($serviceName);
 	}
 
-	public function install()
-	{
-		if (!parent::install() || !$this->registerHook('newOrder') || !$this->registerHook('adminOrder') || !$this->registerHook('cart') || !$this->registerHook('footer') || !$this->getService('ps_accounts.installer')->install()) {
-			return false;
-		}
-
-		Configuration::updateValue('FLP_ENABLED', '1');
-		Configuration::updateValue('FLP_API_KEY', '');
-
-		Db::getInstance()->Execute('CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'orders_fraudlabspro` (
-            `id_order` INT(10) UNSIGNED NOT NULL,
-            `is_country_match` CHAR(2) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-            `is_high_risk_country` CHAR(2) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-            `distance_in_km` VARCHAR(10) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-            `distance_in_mile` VARCHAR(10) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-            `ip_address` VARCHAR(39) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-            `ip_country` VARCHAR(2) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-            `ip_continent` VARCHAR(20) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-            `ip_region` VARCHAR(21) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-            `ip_city` VARCHAR(21) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-            `ip_latitude` VARCHAR(21) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-            `ip_longitude` VARCHAR(21) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-            `ip_timezone` VARCHAR(10) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-            `ip_elevation` VARCHAR(10) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-            `ip_domain` VARCHAR(50) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-            `ip_mobile_mnc` VARCHAR(100) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-            `ip_mobile_mcc` VARCHAR(100) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-            `ip_mobile_brand` VARCHAR(100) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-            `ip_netspeed` VARCHAR(10) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-            `ip_isp_name` VARCHAR(50) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-            `ip_usage_type` VARCHAR(30) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-            `is_free_email` CHAR(2) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-            `is_new_domain_name` CHAR(2) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-            `is_proxy_ip_address` CHAR(2) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-            `is_bin_found` CHAR(2) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-            `is_bin_country_match` CHAR(2) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-            `is_bin_name_match` CHAR(2) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-            `is_bin_phone_match` CHAR(2) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-            `is_bin_prepaid` CHAR(2) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-            `is_address_ship_forward` CHAR(2) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-            `is_bill_ship_city_match` CHAR(2) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-            `is_bill_ship_state_match` CHAR(2) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-            `is_bill_ship_country_match` CHAR(2) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-            `is_bill_ship_postal_match` CHAR(2) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-            `is_ip_blacklist` CHAR(2) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-            `is_email_blacklist` CHAR(2) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-            `is_credit_card_blacklist` CHAR(2) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-            `is_device_blacklist` CHAR(2) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-            `is_user_blacklist` CHAR(2) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-            `flp_score` CHAR(3) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-            `flp_distribution` CHAR(3) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-            `flp_status` CHAR(10) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-			`flp_rules` VARCHAR(255) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-            `flp_id` CHAR(15) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-            `flp_error_code` CHAR(3) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-            `flp_message` VARCHAR(50) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-            `flp_credits` VARCHAR(10) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-            `api_key` CHAR(32) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-            `is_blacklisted` CHAR(1) NOT NULL DEFAULT \'0\' COLLATE \'utf8_bin\',
-            `is_phone_verified` VARCHAR(100) NOT NULL DEFAULT \'0\' COLLATE \'utf8_bin\',
-            INDEX `id_order` (`id_order`)
-        ) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8;');
-
-		Db::getInstance()->Execute('CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'flp_order_ip` (
-              `id_cart` INT NOT NULL,
-            `ip` VARCHAR(39) NOT NULL,
-            PRIMARY KEY (`id_cart`)
-        ) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8;');
-
-		return true;
-	}
-
-	public function uninstall()
-	{
-		if (!parent::uninstall()) {
-			return false;
-		}
-
-		return true;
-	}
-
 	public function getContent()
 	{
-		// Allow to auto-install Account
-		$accountsInstaller = $this->getService('ps_accounts.installer');
-		$accountsInstaller->install();
+		$this->context->smarty->assign('module_dir', $this->_path);
+		$moduleManager = ModuleManagerBuilder::getInstance()->build();
+
+		$accountsService = null;
 
 		try {
-			// Account
-			$accountsFacade = $this->getService('ps_accounts.facade');
+			$accountsFacade = $this->getService('fraudlabspro.ps_accounts_facade');
 			$accountsService = $accountsFacade->getPsAccountsService();
+		} catch (\PrestaShop\PsAccountsInstaller\Installer\Exception\InstallerException $e) {
+			$accountsInstaller = $this->getService('fraudlabspro.ps_accounts_installer');
+			$accountsInstaller->install();
+			$accountsFacade = $this->getService('fraudlabspro.ps_accounts_facade');
+			$accountsService = $accountsFacade->getPsAccountsService();
+		}
+
+		try {
 			Media::addJsDef([
 				'contextPsAccounts' => $accountsFacade->getPsAccountsPresenter()
 					->present($this->name),
 			]);
 
 			// Retrieve Account CDN
-			$this->context->smarty->assign('urlAccountsVueCdn', $accountsService->getAccountsVueCdn());
-
-			$billingFacade = $this->getService('ps_billings.facade');
-			$partnerLogo = $this->getLocalPath() . 'views/img/logo.png';
-
-			// Billing
-			Media::addJsDef($billingFacade->present([
-				'logo'         => $partnerLogo,
-				'tosLink'      => 'https://www.fraudlabspro.com/terms-of-service',
-				'privacyLink'  => 'https://www.fraudlabspro.com/privacy-policy',
-				'emailSupport' => $this->emailSupport,
-			]));
-
-			$this->context->smarty->assign('pathVendor', $this->getPathUri() . 'views/js/chunk-vendors-fraudlabspro.' . $this->version . '.js');
-			$this->context->smarty->assign('pathApp', $this->getPathUri() . 'views/js/app-fraudlabspro.' . $this->version . '.js');
+			$this->context->smarty->assign('urlAccountsCdn', $accountsService->getAccountsCdn());
 		} catch (Exception $e) {
 			$this->context->controller->errors[] = $e->getMessage();
 
 			return '';
 		}
+
+		if ($moduleManager->isInstalled('ps_eventbus')) {
+			$eventbusModule = \Module::getInstanceByName('ps_eventbus');
+			if (version_compare($eventbusModule->version, '1.9.0', '>=')) {
+				$eventbusPresenterService = $eventbusModule->getService('PrestaShop\Module\PsEventbus\Service\PresenterService');
+
+				$this->context->smarty->assign('urlCloudsync', 'https://assets.prestashop3.com/ext/cloudsync-merchant-sync-consent/latest/cloudsync-cdc.js');
+
+				Media::addJsDef([
+					'contextPsEventbus' => $eventbusPresenterService->expose($this, ['info', 'modules', 'themes']),
+				]);
+			}
+		}
+
+		/**********************
+		 * PrestaShop Billing *
+		 * *******************/
+
+		// Load context for PsBilling
+		$billingFacade = $this->getService('fraudlabspro.ps_billings_facade');
+		// $partnerLogo = $this->getLocalPath() . 'logo.png';
+		$partnerLogo = $this->getLocalPath() . 'views/img/logo.png';
+
+		// Billing
+		Media::addJsDef($billingFacade->present([
+			'logo'         => $partnerLogo,
+			'tosUrl'       => 'https://www.fraudlabspro.com/terms-of-service',
+			'privacyUrl'   => 'https://www.fraudlabspro.com/privacy-policy',
+			'emailSupport' => $this->emailSupport,
+		]));
+
+		$this->context->smarty->assign('urlBilling', 'https://unpkg.com/@prestashopcorp/billing-cdc/dist/bundle.js');
 
 		$apiKey = Tools::getValue('flp_api_key');
 
@@ -231,16 +300,16 @@ class Fraudlabspro extends Module
 		}
 
 		$this->context->smarty->assign([
-			'current_url'                   => $this->context->link->getAdminLink('AdminModules') . '&configure=fraudlabspro&tab_module=front_office_features&module_name=fraudlabspro',
-			'module_is_enabled'             => Configuration::get('FLP_IS_ENABLED'),
-			'api_key'                       => Configuration::get('FLP_API_KEY'),
-			'approve_stage_id'              => Configuration::get('FLP_APPROVE_STAGE_ID'),
-			'review_stage_id'               => Configuration::get('FLP_REVIEW_STAGE_ID'),
-			'reject_stage_id'               => Configuration::get('FLP_REJECT_STAGE_ID'),
-			'order_stages'                  => OrderState::getOrderStates((int) $this->context->language->id),
+			'current_url'       => $this->context->link->getAdminLink('AdminModules') . '&configure=fraudlabspro&tab_module=front_office_features&module_name=fraudlabspro',
+			'module_is_enabled' => Configuration::get('FLP_IS_ENABLED'),
+			'api_key'           => Configuration::get('FLP_API_KEY'),
+			'approve_stage_id'  => Configuration::get('FLP_APPROVE_STAGE_ID'),
+			'review_stage_id'   => Configuration::get('FLP_REVIEW_STAGE_ID'),
+			'reject_stage_id'   => Configuration::get('FLP_REJECT_STAGE_ID'),
+			'order_stages'      => OrderState::getOrderStates((int) $this->context->language->id),
 		]);
 
-		return $this->context->smarty->fetch($this->template_dir . 'fraudlabspro.tpl');
+		return $this->context->smarty->fetch($this->template_dir . 'configure.tpl');
 	}
 
 	public function hookCart($params)
@@ -290,33 +359,33 @@ class Fraudlabspro extends Module
 		}
 
 		$response = Tools::file_get_contents('https://api.fraudlabspro.com/v1/order/screen?' . http_build_query([
-			'key'                => Configuration::get('FLP_API_KEY'),
-			'ip'                 => $ip,
-			'first_name'         => $address_invoice->firstname,
-			'last_name'          => $address_invoice->lastname,
-			'bill_city'          => $address_invoice->city,
-			'bill_state'         => $bill_state,
-			'bill_country'       => Country::getIsoById((int) $address_invoice->id_country),
-			'bill_zip_code'      => $address_invoice->postcode,
-			'email_domain'       => Tools::substr($customer->email, strpos($customer->email, '@') + 1),
-			'email_hash'         => $this->hastIt($customer->email),
-			'email'              => $customer->email,
-			'user_phone'         => $address_invoice->phone,
-			'ship_addr'          => trim($address_delivery->address1 . ' ' . $address_delivery->address2),
-			'ship_city'          => $address_delivery->city,
-			'ship_state'         => (Tools::getIsset($delivery_state->iso_code)) ? $delivery_state->iso_code : '',
-			'ship_zip_code'      => $address_delivery->postcode,
-			'ship_country'       => Country::getIsoById((int) $address_delivery->id_country),
-			'amount'             => $params['order']->total_paid,
-			'quantity'           => $quantity,
-			'currency'           => $default_currency->iso_code,
-			'user_order_id'      => $params['order']->id,
-			'payment_gateway'    => $params['order']->payment,
-			'items'              => implode(',', $items),
-			'flp_checksum'       => Context::getContext()->cookie->flp_checksum,
-			'format'             => 'json',
-			'source'             => 'prestashop',
-			'source_version'     => $this->version,
+			'key'             => Configuration::get('FLP_API_KEY'),
+			'ip'              => $ip,
+			'first_name'      => $address_invoice->firstname,
+			'last_name'       => $address_invoice->lastname,
+			'bill_city'       => $address_invoice->city,
+			'bill_state'      => $bill_state,
+			'bill_country'    => Country::getIsoById((int) $address_invoice->id_country),
+			'bill_zip_code'   => $address_invoice->postcode,
+			'email_domain'    => Tools::substr($customer->email, strpos($customer->email, '@') + 1),
+			'email_hash'      => $this->hastIt($customer->email),
+			'email'           => $customer->email,
+			'user_phone'      => $address_invoice->phone,
+			'ship_addr'       => trim($address_delivery->address1 . ' ' . $address_delivery->address2),
+			'ship_city'       => $address_delivery->city,
+			'ship_state'      => (Tools::getIsset($delivery_state->iso_code)) ? $delivery_state->iso_code : '',
+			'ship_zip_code'   => $address_delivery->postcode,
+			'ship_country'    => Country::getIsoById((int) $address_delivery->id_country),
+			'amount'          => $params['order']->total_paid,
+			'quantity'        => $quantity,
+			'currency'        => $default_currency->iso_code,
+			'user_order_id'   => $params['order']->id,
+			'payment_gateway' => $params['order']->payment,
+			'items'           => implode(',', $items),
+			'flp_checksum'    => Context::getContext()->cookie->flp_checksum,
+			'format'          => 'json',
+			'source'          => 'prestashop',
+			'source_version'  => $this->version,
 		]), false, stream_context_create([
 			'http' => ['timeout' => 10],
 		]));

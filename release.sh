@@ -1,13 +1,11 @@
 #!/bin/bash
 
-mkdir fraudlabspro
-cp config.xml fraudlabspro/
-cp fraudlabspro.php fraudlabspro/
-cp logo.png fraudlabspro/
-cp -r config fraudlabspro/
-cp -r vendor fraudlabspro/
-cp -r views fraudlabspro/
-cp index.php fraudlabspro/
-zip -q -r fraudlabspro.zip fraudlabspro/
-rm -rf fraudlabspro
-mv fraudlabspro.zip ../fraudlabspro-release.zip
+ROOT="$PWD"
+mkdir /tmp/fraudlabspro
+cp -r * /tmp/fraudlabspro
+cd /tmp/fraudlabspro
+rm release.sh README.md
+composer install
+cd ..
+zip -r fraudlabspro.zip fraudlabspro
+mv fraudlabspro.zip $ROOT/
