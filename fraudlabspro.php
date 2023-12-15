@@ -44,7 +44,7 @@ class FraudLabsPro extends Module
 	{
 		$this->name = 'fraudlabspro';
 		$this->tab = 'payment_security';
-		$this->version = '2.1.1';
+		$this->version = '2.2.0';
 		$this->author = 'FraudLabs Pro';
 		$this->emailSupport = 'support@fraudlabspro.com';
 		$this->module_key = 'cdb22a61c7ec8d1f900f6c162ad96caa';
@@ -358,41 +358,93 @@ class FraudLabsPro extends Module
 			$bill_state = $State->iso_code;
 		}
 
-		$response = Tools::file_get_contents('https://api.fraudlabspro.com/v1/order/screen?' . http_build_query([
-			'key'             => Configuration::get('FLP_API_KEY'),
-			'ip'              => $ip,
-			'first_name'      => $address_invoice->firstname,
-			'last_name'       => $address_invoice->lastname,
-			'bill_city'       => $address_invoice->city,
-			'bill_state'      => $bill_state,
-			'bill_country'    => Country::getIsoById((int) $address_invoice->id_country),
-			'bill_zip_code'   => $address_invoice->postcode,
-			'email_domain'    => Tools::substr($customer->email, strpos($customer->email, '@') + 1),
-			'email_hash'      => $this->hastIt($customer->email),
-			'email'           => $customer->email,
-			'user_phone'      => $address_invoice->phone,
-			'ship_addr'       => trim($address_delivery->address1 . ' ' . $address_delivery->address2),
-			'ship_city'       => $address_delivery->city,
-			'ship_state'      => (Tools::getIsset($delivery_state->iso_code)) ? $delivery_state->iso_code : '',
-			'ship_zip_code'   => $address_delivery->postcode,
-			'ship_country'    => Country::getIsoById((int) $address_delivery->id_country),
-			'amount'          => $params['order']->total_paid,
-			'quantity'        => $quantity,
-			'currency'        => $default_currency->iso_code,
-			'user_order_id'   => $params['order']->id,
-			'payment_gateway' => $params['order']->payment,
-			'items'           => implode(',', $items),
-			'flp_checksum'    => Context::getContext()->cookie->flp_checksum,
-			'format'          => 'json',
-			'source'          => 'prestashop',
-			'source_version'  => $this->version,
-		]), false, stream_context_create([
-			'http' => ['timeout' => 10],
+		$response = Tools::file_get_contents('https://api.fraudlabspro.com/v2/order/screen', false, stream_context_create([
+			'http' => [
+				'timeout' => 10,
+				'method'  => 'POST',
+				'header'  => 'Content-Type: application/x-www-form-urlencoded',
+				'content' => http_build_query([
+					'key'             => Configuration::get('FLP_API_KEY'),
+					'ip'              => $ip,
+					'first_name'      => $address_invoice->firstname,
+					'last_name'       => $address_invoice->lastname,
+					'bill_city'       => $address_invoice->city,
+					'bill_state'      => $bill_state,
+					'bill_country'    => Country::getIsoById((int) $address_invoice->id_country),
+					'bill_zip_code'   => $address_invoice->postcode,
+					'email_domain'    => Tools::substr($customer->email, strpos($customer->email, '@') + 1),
+					'email_hash'      => $this->hastIt($customer->email),
+					'email'           => $customer->email,
+					'user_phone'      => $address_invoice->phone,
+					'ship_addr'       => trim($address_delivery->address1 . ' ' . $address_delivery->address2),
+					'ship_city'       => $address_delivery->city,
+					'ship_state'      => (Tools::getIsset($delivery_state->iso_code)) ? $delivery_state->iso_code : '',
+					'ship_zip_code'   => $address_delivery->postcode,
+					'ship_country'    => Country::getIsoById((int) $address_delivery->id_country),
+					'amount'          => $params['order']->total_paid,
+					'quantity'        => $quantity,
+					'currency'        => $default_currency->iso_code,
+					'user_order_id'   => $params['order']->id,
+					'payment_gateway' => $params['order']->payment,
+					'items'           => implode(',', $items),
+					'flp_checksum'    => Context::getContext()->cookie->flp_checksum,
+					'format'          => 'json',
+					'source'          => 'prestashop',
+					'source_version'  => $this->version,
+				]),
+			],
 		]));
 
 		if (($json = Tools::jsonDecode($response)) !== null) {
 			$data = [
-				$params['order']->id, $json->is_country_match, $json->is_high_risk_country, $json->distance_in_km, $json->distance_in_mile, $ip, $json->ip_country, $json->ip_continent, $json->ip_region, $json->ip_city, $json->ip_latitude, $json->ip_longitude, $json->ip_timezone, $json->ip_elevation, $json->ip_domain, $json->ip_mobile_mnc, $json->ip_mobile_mcc, $json->ip_mobile_brand, $json->ip_netspeed, $json->ip_isp_name, $json->ip_usage_type, $json->is_free_email, $json->is_new_domain_name, $json->is_proxy_ip_address, $json->is_bin_found, $json->is_bin_country_match, $json->is_bin_name_match, $json->is_bin_phone_match, $json->is_bin_prepaid, $json->is_address_ship_forward, $json->is_bill_ship_city_match, $json->is_bill_ship_state_match, $json->is_bill_ship_country_match, $json->is_bill_ship_postal_match, $json->is_ip_blacklist, $json->is_email_blacklist, $json->is_credit_card_blacklist, $json->is_device_blacklist, $json->is_user_blacklist, $json->fraudlabspro_score, $json->fraudlabspro_distribution, $json->fraudlabspro_status, $json->fraudlabspro_rules, $json->fraudlabspro_id, $json->fraudlabspro_error_code, $json->fraudlabspro_message, $json->fraudlabspro_credits, Configuration::get('FLP_API_KEY'),
+				$params['order']->id,
+				($json->billing_address->is_ip_country_match) ? 'Y' : 'N',
+				'',
+				$json->billing_address->ip_distance_in_km,
+				$json->billing_address->ip_distance_in_mile,
+				$ip,
+				$json->ip_geolocation->country_code,
+				$json->ip_geolocation->continent,
+				$json->ip_geolocation->region,
+				$json->ip_geolocation->city,
+				$json->ip_geolocation->latitude,
+				$json->ip_geolocation->longitude,
+				$json->ip_geolocation->timezone,
+				$json->ip_geolocation->elevation,
+				$json->ip_geolocation->domain,
+				$json->ip_geolocation->mobile_mnc,
+				$json->ip_geolocation->mobile_mcc,
+				$json->ip_geolocation->mobile_brand,
+				$json->ip_geolocation->netspeed,
+				$json->ip_geolocation->isp_name,
+				implode(', ', $json->ip_geolocation->usage_type),
+				($json->email_address->is_free) ? 'Y' : 'N',
+				($json->email_address->is_new_domain_name) ? 'Y' : 'N',
+				($json->ip_geolocation->is_proxy) ? 'Y' : 'N',
+				($json->credit_card->is_bin_exist) ? 'Y' : 'N',
+				$json->credit_card->is_bin_country_match ? 'Y' : 'N',
+				'',
+				'',
+				($json->credit_card->is_prepaid) ? 'Y' : 'N',
+				($json->shipping_address->is_address_ship_forward) ? 'Y' : 'N',
+				($json->shipping_address->is_bill_city_match) ? 'Y' : 'N',
+				($json->shipping_address->is_state_city_match) ? 'Y' : 'N',
+				($json->shipping_address->is_bill_country_match) ? 'Y' : 'N',
+				($json->shipping_address->is_bill_postcode_match) ? 'Y' : 'N',
+				($json->ip_geolocation->is_in_blacklist) ? 'Y' : 'N',
+				($json->email_address->is_in_blacklist) ? 'Y' : 'N',
+				($json->credit_card->is_in_blacklist) ? 'Y' : 'N',
+				($json->device->is_in_blacklist) ? 'Y' : 'N',
+				($json->username->is_in_blacklist) ? 'Y' : 'N',
+				$json->fraudlabspro_score,
+				0,
+				$json->fraudlabspro_status,
+				implode(', ', $json->fraudlabspro_rules),
+				$json->fraudlabspro_id,
+				$json->fraudlabspro->error->error_code ?? '',
+				$json->fraudlabspro->error->error_message ?? '',
+				$json->fraudlabspro_credits,
+				Configuration::get('FLP_API_KEY'),
 			];
 
 			Db::getInstance()->execute('INSERT INTO `' . _DB_PREFIX_ . 'orders_fraudlabspro` (`id_order`, `is_country_match`, `is_high_risk_country`, `distance_in_km`, `distance_in_mile`, `ip_address`, `ip_country`, `ip_continent`, `ip_region`, `ip_city`, `ip_latitude`, `ip_longitude`, `ip_timezone`, `ip_elevation`, `ip_domain`, `ip_mobile_mnc`, `ip_mobile_mcc`, `ip_mobile_brand`, `ip_netspeed`, `ip_isp_name`, `ip_usage_type`, `is_free_email`, `is_new_domain_name`, `is_proxy_ip_address`, `is_bin_found`, `is_bin_country_match`, `is_bin_name_match`, `is_bin_phone_match`, `is_bin_prepaid`, `is_address_ship_forward`, `is_bill_ship_city_match`, `is_bill_ship_state_match`, `is_bill_ship_country_match`, `is_bill_ship_postal_match`, `is_ip_blacklist`, `is_email_blacklist`, `is_credit_card_blacklist`, `is_device_blacklist`, `is_user_blacklist`, `flp_score`, `flp_distribution`, `flp_status`, `flp_rules`, `flp_id`, `flp_error_code`, `flp_message`, `flp_credits`, `api_key`) VALUES (\'' . implode('\', \'', array_map('pSQL', $data)) . '\')');
@@ -530,15 +582,20 @@ class FraudLabsPro extends Module
 
 	private function feedback($action, $id, $note = '')
 	{
-		$stream_context = stream_context_create(['http' => ['timeout' => 10]]);
-
-		Tools::file_get_contents('https://api.fraudlabspro.com/v1/order/feedback?' . http_build_query([
-			'key'    => Configuration::get('FLP_API_KEY'),
-			'action' => $action,
-			'id'     => $id,
-			'note'   => $note,
-			'format' => 'json',
-		]), false, $stream_context);
+		Tools::file_get_contents('https://api.fraudlabspro.com/v2/order/feedback', false, stream_context_create([
+			'http' => [
+				'timeout' => 10,
+				'method'  => 'POST',
+				'header'  => 'Content-Type: application/x-www-form-urlencoded',
+				'content' => http_build_query([
+					'key'    => Configuration::get('FLP_API_KEY'),
+					'action' => $action,
+					'id'     => $id,
+					'note'   => $note,
+					'format' => 'json',
+				]),
+			],
+		]));
 
 		return true;
 	}
