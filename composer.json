@@ -13,7 +13,7 @@
     "php": ">=5.6",
     "prestashop/prestashop-accounts-installer": "^1.0",
     "prestashop/module-lib-service-container": "^1.4",
-    "prestashopcorp/module-lib-billing": "^3.2",
+    "prestashopcorp/module-lib-billing": "3.2.*",
     "prestashop/module-lib-mbo-installer": "^0.1"
   },
   "autoload": {

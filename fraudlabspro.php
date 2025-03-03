@@ -44,7 +44,7 @@ class FraudLabsPro extends Module
 	{
 		$this->name = 'fraudlabspro';
 		$this->tab = 'payment_security';
-		$this->version = '2.2.0';
+		$this->version = '2.3.0';
 		$this->author = 'FraudLabs Pro';
 		$this->emailSupport = 'support@fraudlabspro.com';
 		$this->module_key = 'cdb22a61c7ec8d1f900f6c162ad96caa';
@@ -88,6 +88,7 @@ class FraudLabsPro extends Module
 
 				Configuration::updateValue('FLP_ENABLED', '1');
 				Configuration::updateValue('FLP_API_KEY', '');
+				Configuration::updateValue('FLP_REAL_IP_HEADER', '');
 
 				Db::getInstance()->Execute('CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'orders_fraudlabspro` (
 					`id_order` INT(10) UNSIGNED NOT NULL,
@@ -291,6 +292,7 @@ class FraudLabsPro extends Module
 			if (!count($this->context->controller->errors)) {
 				Configuration::updateValue('FLP_IS_ENABLED', Tools::getValue('module_is_enabled'));
 				Configuration::updateValue('FLP_API_KEY', Tools::getValue('api_key'));
+				Configuration::updateValue('FLP_REAL_IP_HEADER', Tools::getValue('real_ip_header'));
 				Configuration::updateValue('FLP_APPROVE_STAGE_ID', Tools::getValue('approve_stage_id'));
 				Configuration::updateValue('FLP_REVIEW_STAGE_ID', Tools::getValue('review_stage_id'));
 				Configuration::updateValue('FLP_REJECT_STAGE_ID', Tools::getValue('reject_stage_id'));
@@ -303,10 +305,12 @@ class FraudLabsPro extends Module
 			'current_url'       => $this->context->link->getAdminLink('AdminModules') . '&configure=fraudlabspro&tab_module=front_office_features&module_name=fraudlabspro',
 			'module_is_enabled' => Configuration::get('FLP_IS_ENABLED'),
 			'api_key'           => Configuration::get('FLP_API_KEY'),
+			'real_ip_header'    => Configuration::get('FLP_REAL_IP_HEADER'),
 			'approve_stage_id'  => Configuration::get('FLP_APPROVE_STAGE_ID'),
 			'review_stage_id'   => Configuration::get('FLP_REVIEW_STAGE_ID'),
 			'reject_stage_id'   => Configuration::get('FLP_REJECT_STAGE_ID'),
 			'order_stages'      => OrderState::getOrderStates((int) $this->context->language->id),
+			'headers'           => ['REMOTE_ADDR', 'HTTP_CF_CONNECTING_IP', 'HTTP_CLIENT_IP', 'HTTP_FORWARDED', 'HTTP_INCAP_CLIENT_IP', 'HTTP_X_FORWARDED', 'HTTP_X_FORWARDED_FOR', 'HTTP_X_REAL_IP', 'HTTP_X_SUCURI_CLIENTIP'],
 		]);
 
 		return $this->context->smarty->fetch($this->template_dir . 'configure.tpl');
@@ -350,6 +354,12 @@ class FraudLabsPro extends Module
 
 		$ip = Db::getInstance()->getValue('SELECT `ip` FROM  `' . _DB_PREFIX_ . 'flp_order_ip` WHERE `id_cart` = "' . ((int) $params['cart']->id) . '"');
 		$ip = (!$ip) ? $this->getClientIp() : $ip;
+
+		if (Configuration::get('FLP_REAL_IP_HEADER')) {
+			if (isset($_SERVER[Configuration::get('FLP_REAL_IP_HEADER')]) && filter_var($_SERVER[Configuration::get('FLP_REAL_IP_HEADER')], FILTER_VALIDATE_IP)) {
+				$ip = $_SERVER[Configuration::get('FLP_REAL_IP_HEADER')];
+			}
+		}
 
 		$bill_state = '';
 
@@ -615,3 +625,4 @@ class FraudLabsPro extends Module
 		return $hash;
 	}
 }
+

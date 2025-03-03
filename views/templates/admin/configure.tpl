@@ -1,5 +1,5 @@
 {**
- * 2013-2023 FraudLabs Pro
+ * 2013-2025 FraudLabs Pro
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy of this software
  * and associated documentation files (the "Software"), to deal in the Software without restriction,
@@ -17,7 +17,7 @@
  * SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
  *
  * @author FraudLabs Pro <support@fraudlabspro.com>
- * @copyright  2013-2023 FraudLabs Pro
+ * @copyright  2013-2025 FraudLabs Pro
  * @license https://opensource.org/licenses/MIT (MIT)
 *}
 
@@ -48,21 +48,35 @@
         </div>
         <div class="form-group">
           <label class="control-label col-md-3">{l s='API Key' d='Modules.FraudLabsPro.Admin'}</label>
+
           <div class="col-md-9">
-        <input type="text" name="api_key" value="{$api_key|escape:'htmlall':'UTF-8'}" class="form-control" />
-        <p class="help-block">{l s='The API key obtained from FraudLabs Pro.' d='Modules.FraudLabsPro.Admin'}</p>
+            <input type="text" name="api_key" value="{$api_key|escape:'htmlall':'UTF-8'}" class="form-control" />
+            <p class="help-block">{l s='The API key obtained from FraudLabs Pro.' d='Modules.FraudLabsPro.Admin'}</p>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="control-label col-md-3">{l s='Real IP Header' d='Modules.FraudLabsPro.Admin'}</label>
+
+          <div class="col-md-9">
+            <select name="real_ip_header" class="form-control">
+              <option value=""{if !$real_ip_header} selected{/if}>{l s='Disabled' d='Modules.FraudLabsPro.Admin'}</option>
+              {foreach from=$headers item=header}
+                <option value="{$header|escape:'htmlall':'UTF-8'}"{if $real_ip_header == $header} selected{/if}>{$header|escape:'htmlall':'UTF-8'}</option>
+              {/foreach}
+            </select>
+            <p class="help-block">{l s='If your PrestaShop is installed behind a reverse proxy or load balancer, the real IP address of the visitors may not forwarded correctly and causing inaccurate country results. Use this option to choose the correct header to override the IP detected by FraudLabs Pro.' d='Modules.FraudLabsPro.Admin'}</p>
           </div>
         </div>
         <div class="form-group">
           <label class="control-label col-md-3">{l s='Approve Status' d='Modules.FraudLabsPro.Admin'}</label>
           <div class="col-md-9">
-        <select name="approve_stage_id" class="form-control">
-          <option value="0"{if !$approve_stage_id} selected{/if}>{l s='Do not change' d='Modules.FraudLabsPro.Admin'}</option>
-          {foreach from=$order_stages item=stage}
-            <option value="{$stage.id_order_state|escape:'htmlall':'UTF-8'}"{if $approve_stage_id == $stage.id_order_state} selected{/if}>{$stage.name|escape:'htmlall':'UTF-8'}</option>
-          {/foreach}
-        </select>
-        <p class="help-block">{l s='Change order to this stage when transaction is approved by FraudLabs Pro.' d='Modules.FraudLabsPro.Admin'}</p>
+            <select name="approve_stage_id" class="form-control">
+              <option value="0"{if !$approve_stage_id} selected{/if}>{l s='Do not change' d='Modules.FraudLabsPro.Admin'}</option>
+              {foreach from=$order_stages item=stage}
+                <option value="{$stage.id_order_state|escape:'htmlall':'UTF-8'}"{if $approve_stage_id == $stage.id_order_state} selected{/if}>{$stage.name|escape:'htmlall':'UTF-8'}</option>
+              {/foreach}
+            </select>
+            <p class="help-block">{l s='Change order to this stage when transaction is approved by FraudLabs Pro.' d='Modules.FraudLabsPro.Admin'}</p>
           </div>
         </div>
         <div class="form-group">
@@ -123,7 +137,7 @@
     cdc.init('#prestashop-cloudsync');
     cdc.on('OnboardingCompleted', (isCompleted) => {
         console.log('OnboardingCompleted', isCompleted);
-        
+
     });
     cdc.isOnboardingCompleted((isCompleted) => {
         console.log('Onboarding is already Completed', isCompleted);

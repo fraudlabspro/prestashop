@@ -5,6 +5,7 @@ rm fraudlabspro.zip
 rm -rf /tmp/fraudlabspro
 mkdir /tmp/fraudlabspro
 cp -r * /tmp/fraudlabspro
+cp .htaccess /tmp/fraudlabspro
 cd /tmp/fraudlabspro
 rm release.sh README.md
 composer install
