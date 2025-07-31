@@ -44,7 +44,7 @@ class FraudLabsPro extends Module
 	{
 		$this->name = 'fraudlabspro';
 		$this->tab = 'payment_security';
-		$this->version = '2.3.1';
+		$this->version = '2.4.0';
 		$this->author = 'FraudLabs Pro';
 		$this->emailSupport = 'support@fraudlabspro.com';
 		$this->module_key = 'cdb22a61c7ec8d1f900f6c162ad96caa';
@@ -623,13 +623,14 @@ class FraudLabsPro extends Module
 		return $_SERVER['REMOTE_ADDR'];
 	}
 
-	private function hastIt($s, $prefix = 'fraudlabspro_')
+	private function hastIt($s)
 	{
-		$hash = $prefix . $s;
-		for ($i = 0; $i < 65536; ++$i) {
-			$hash = sha1($prefix . $hash);
+		$hash = 'fraudlabspro_' . $s;
+
+		for ($i = 0; $i < 65536; $i++) {
+			$hash = sha1('fraudlabspro_' . $hash);
 		}
 
-		return $hash;
+		return hash('sha256', $hash);
 	}
 }
