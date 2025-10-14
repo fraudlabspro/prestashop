@@ -117,6 +117,7 @@
         </div>
       </form>
     </div>
+    <p>Visit our <a href="https://www.fraudlabspro.com/resources/categories/prestashop/" target="_blank">resources page</a> to learn more about how to use the FLP Prestashop plugin.</p>
 </div>
 
 <script src="{$urlAccountsCdn|escape:'htmlall':'UTF-8'}" rel=preload></script>
@@ -139,6 +140,7 @@
         console.log('OnboardingCompleted', isCompleted);
 
     });
+
     cdc.isOnboardingCompleted((isCompleted) => {
         console.log('Onboarding is already Completed', isCompleted);
     });
@@ -159,3 +161,4 @@
         }
     });
 </script>
+

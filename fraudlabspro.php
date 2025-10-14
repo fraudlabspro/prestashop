@@ -29,22 +29,20 @@ if (!defined('_PS_VERSION_')) {
 	exit;
 }
 
-require 'vendor/autoload.php';
+$autoloadPath = __DIR__ . '/vendor/autoload.php';
+if (file_exists($autoloadPath)) {
+	require_once $autoloadPath;
+}
 
 class FraudLabsPro extends Module
 {
-	protected $_postErrors = [];
-
-	/**
-	 * @var ServiceContainer
-	 */
 	private $container;
 
 	public function __construct()
 	{
 		$this->name = 'fraudlabspro';
 		$this->tab = 'payment_security';
-		$this->version = '2.4.0';
+		$this->version = '2.4.2';
 		$this->author = 'FraudLabs Pro';
 		$this->emailSupport = 'support@fraudlabspro.com';
 		$this->module_key = 'cdb22a61c7ec8d1f900f6c162ad96caa';
@@ -73,89 +71,14 @@ class FraudLabsPro extends Module
 
 	public function install()
 	{
-		// Test if MBO is installed
-		// For more information, check the readme of mbo-lib-installer
 		$mboStatus = (new Prestashop\ModuleLibMboInstaller\Presenter())->present();
 
 		if (!$mboStatus['isInstalled']) {
 			try {
 				$mboInstaller = new Prestashop\ModuleLibMboInstaller\Installer(_PS_VERSION_);
-				/** @var bool */
-				$result = $mboInstaller->installModule();
-
-				// Call the installation of PrestaShop Integration Framework components
+				$mboInstaller->installModule();
 				$this->installDependencies();
-
-				Configuration::updateValue('FLP_ENABLED', '1');
-				Configuration::updateValue('FLP_API_KEY', '');
-				Configuration::updateValue('FLP_REAL_IP_HEADER', '');
-
-				Db::getInstance()->Execute('CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'orders_fraudlabspro` (
-					`id_order` INT(10) UNSIGNED NOT NULL,
-					`is_country_match` CHAR(2) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-					`is_high_risk_country` CHAR(2) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-					`distance_in_km` VARCHAR(10) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-					`distance_in_mile` VARCHAR(10) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-					`ip_address` VARCHAR(39) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-					`ip_country` VARCHAR(2) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-					`ip_continent` VARCHAR(20) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-					`ip_region` VARCHAR(21) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-					`ip_city` VARCHAR(21) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-					`ip_latitude` VARCHAR(21) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-					`ip_longitude` VARCHAR(21) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-					`ip_timezone` VARCHAR(10) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-					`ip_elevation` VARCHAR(10) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-					`ip_domain` VARCHAR(50) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-					`ip_mobile_mnc` VARCHAR(100) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-					`ip_mobile_mcc` VARCHAR(100) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-					`ip_mobile_brand` VARCHAR(100) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-					`ip_netspeed` VARCHAR(10) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-					`ip_isp_name` VARCHAR(50) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-					`ip_usage_type` VARCHAR(30) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-					`is_free_email` CHAR(2) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-					`is_new_domain_name` CHAR(2) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-					`is_proxy_ip_address` CHAR(2) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-					`is_bin_found` CHAR(2) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-					`is_bin_country_match` CHAR(2) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-					`is_bin_name_match` CHAR(2) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-					`is_bin_phone_match` CHAR(2) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-					`is_bin_prepaid` CHAR(2) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-					`is_address_ship_forward` CHAR(2) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-					`is_bill_ship_city_match` CHAR(2) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-					`is_bill_ship_state_match` CHAR(2) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-					`is_bill_ship_country_match` CHAR(2) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-					`is_bill_ship_postal_match` CHAR(2) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-					`is_ip_blacklist` CHAR(2) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-					`is_email_blacklist` CHAR(2) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-					`is_credit_card_blacklist` CHAR(2) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-					`is_device_blacklist` CHAR(2) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-					`is_user_blacklist` CHAR(2) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-					`flp_score` CHAR(3) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-					`flp_distribution` CHAR(3) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-					`flp_status` CHAR(10) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-					`flp_rules` VARCHAR(255) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-					`flp_id` CHAR(15) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-					`flp_error_code` CHAR(3) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-					`flp_message` VARCHAR(50) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-					`flp_credits` VARCHAR(10) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-					`api_key` CHAR(32) NOT NULL DEFAULT \'\' COLLATE \'utf8_bin\',
-					`is_blacklisted` CHAR(1) NOT NULL DEFAULT "0" COLLATE \'utf8_bin\',
-					`is_phone_verified` VARCHAR(100) NOT NULL DEFAULT "0" COLLATE \'utf8_bin\',
-					INDEX `id_order` (`id_order`)
-				) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8;');
-
-				Db::getInstance()->Execute('CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'flp_order_ip` (
-					`id_cart` INT NOT NULL,
-					`ip` VARCHAR(39) NOT NULL,
-					PRIMARY KEY (`id_cart`)
-				) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8;');
-
-				$this->registerHook('newOrder');
-				$this->registerHook('adminOrder');
-				$this->registerHook('cart');
-				$this->registerHook('footer');
 			} catch (\Exception $e) {
-				// Some errors can happen, i.e during initialization or download of the module
 				$this->context->controller->errors[] = $e->getMessage();
 
 				return 'Error during MBO installation';
@@ -164,7 +87,10 @@ class FraudLabsPro extends Module
 			$this->installDependencies();
 		}
 
-		return parent::install();
+		$this->buildTables();
+		$this->resetConfiguration();
+
+		return (parent::install() && $this->registerHooks());
 	}
 
 	/**
@@ -195,8 +121,21 @@ class FraudLabsPro extends Module
 		}
 	}
 
-	public function uninstall()
+	public function uninstall($deleteParams = true)
 	{
+		if ($deleteParams) {
+			Configuration::deleteByName('FLP_IS_ENABLED');
+			Configuration::deleteByName('FLP_API_KEY');
+			Configuration::deleteByName('FLP_REAL_IP_HEADER');
+			Configuration::deleteByName('FLP_APPROVE_STAGE_ID');
+			Configuration::deleteByName('FLP_REVIEW_STAGE_ID');
+			Configuration::deleteByName('FLP_REJECT_STAGE_ID');
+
+			if (!Db::getInstance()->execute('DROP TABLE IF EXISTS ' . _DB_PREFIX_ . 'orders_fraudlabspro') || !Db::getInstance()->execute('DROP TABLE IF EXISTS ' . _DB_PREFIX_ . 'flp_order_ip')) {
+				return false;
+			}
+		}
+
 		return parent::uninstall();
 	}
 
@@ -316,7 +255,7 @@ class FraudLabsPro extends Module
 		return $this->context->smarty->fetch($this->template_dir . 'configure.tpl');
 	}
 
-	public function hookCart($params)
+	public function hookActionCartSave($params)
 	{
 		if (!Validate::isLoadedObject($params['cart'])) {
 			return;
@@ -326,7 +265,7 @@ class FraudLabsPro extends Module
 		Db::getInstance()->Execute('INSERT IGNORE INTO `' . _DB_PREFIX_ . 'flp_order_ip` VALUES(' . (int) $params['cart']->id . ', "' . pSQL($this->getClientIp()) . '")');
 	}
 
-	public function hookNewOrder($params)
+	public function hookActionValidateOrder($params)
 	{
 		if (!Configuration::get('PS_SHOP_ENABLE') || !Configuration::get('FLP_API_KEY') || !Configuration::get('FLP_ENABLED')) {
 			return;
@@ -400,7 +339,7 @@ class FraudLabsPro extends Module
 			],
 		]));
 
-		if (($json = Tools::jsonDecode($response)) !== null) {
+		if (($json = json_decode($response)) !== null) {
 			$data = [
 				'id_order'                   => (int) $params['order']->id,
 				'is_country_match'           => ($json->billing_address->is_ip_country_match) ? 'Y' : 'N',
@@ -448,7 +387,7 @@ class FraudLabsPro extends Module
 				'flp_id'                     => pSQL($json->fraudlabspro_id),
 				'flp_error_code'             => pSQL($json->fraudlabspro->error->error_code ?? ''),
 				'flp_message'                => pSQL($json->fraudlabspro->error->error_message ?? ''),
-				'flp_credits'                => pSQL($json->fraudlabspro_credits),
+				'flp_credits'                => pSQL($json->remaining_credits),
 				'api_key'                    => pSQL(Configuration::get('FLP_API_KEY')),
 			];
 
@@ -481,12 +420,12 @@ class FraudLabsPro extends Module
 		return true;
 	}
 
-	public function hookFooter()
+	public function hookDisplayFooter()
 	{
 		return $this->display(__FILE__, 'footer.tpl');
 	}
 
-	public function hookAdminOrder($params)
+	public function hookDisplayAdminOrder($params)
 	{
 		if (Tools::getValue('transactionId')) {
 			if (Tools::getValue('approve')) {
@@ -525,7 +464,7 @@ class FraudLabsPro extends Module
 
 			$showUpgrade = false;
 
-			if (($json = Tools::jsonDecode($response)) !== null) {
+			if (($json = json_decode($response)) !== null) {
 				if (preg_match('/Micro/', $json->plan_name)) {
 					$showUpgrade = true;
 				} elseif (isset($row['flp_rules'])) {
@@ -533,12 +472,6 @@ class FraudLabsPro extends Module
 				}
 			}
 
-			/*
-			 * Note for developers:
-			 * To prevent potential Stored XSS vulnerabilities, ensure all variables printed
-			 * in the 'admin_order.tpl' template are properly escaped using Smarty's escape modifier.
-			 * Example: {$client_ip|escape:'html':'UTF-8'}
-			 */
 			$this->smarty->assign([
 				'no_result'                  => false,
 				'fraud_score'                => $row['flp_score'],
@@ -578,6 +511,87 @@ class FraudLabsPro extends Module
 		}
 
 		return $this->display(__FILE__, 'admin_order.tpl');
+	}
+
+	private function resetConfiguration()
+	{
+		Configuration::updateValue('FLP_IS_ENABLED', 0);
+		Configuration::updateValue('FLP_API_KEY', '');
+		Configuration::updateValue('FLP_REAL_IP_HEADER', '');
+		Configuration::updateValue('FLP_APPROVE_STAGE_ID', 0);
+		Configuration::updateValue('FLP_REVIEW_STAGE_ID', 0);
+		Configuration::updateValue('FLP_REJECT_STAGE_ID', 0);
+	}
+
+	private function buildTables()
+	{
+		return Db::getInstance()->Execute('CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'orders_fraudlabspro` (
+			`id_order` INT(10) UNSIGNED NOT NULL,
+			`is_country_match` CHAR(2) NOT NULL DEFAULT \'\',
+			`is_high_risk_country` CHAR(2) NOT NULL DEFAULT \'\',
+			`distance_in_km` VARCHAR(10) NOT NULL DEFAULT \'\',
+			`distance_in_mile` VARCHAR(10) NOT NULL DEFAULT \'\',
+			`ip_address` VARCHAR(39) NOT NULL DEFAULT \'\',
+			`ip_country` VARCHAR(2) NOT NULL DEFAULT \'\',
+			`ip_continent` VARCHAR(20) NOT NULL DEFAULT \'\',
+			`ip_region` VARCHAR(21) NOT NULL DEFAULT \'\',
+			`ip_city` VARCHAR(21) NOT NULL DEFAULT \'\',
+			`ip_latitude` VARCHAR(21) NOT NULL DEFAULT \'\',
+			`ip_longitude` VARCHAR(21) NOT NULL DEFAULT \'\',
+			`ip_timezone` VARCHAR(10) NOT NULL DEFAULT \'\',
+			`ip_elevation` VARCHAR(10) NOT NULL DEFAULT \'\',
+			`ip_domain` VARCHAR(50) NOT NULL DEFAULT \'\',
+			`ip_mobile_mnc` VARCHAR(100) NOT NULL DEFAULT \'\',
+			`ip_mobile_mcc` VARCHAR(100) NOT NULL DEFAULT \'\',
+			`ip_mobile_brand` VARCHAR(100) NOT NULL DEFAULT \'\',
+			`ip_netspeed` VARCHAR(10) NOT NULL DEFAULT \'\',
+			`ip_isp_name` VARCHAR(50) NOT NULL DEFAULT \'\',
+			`ip_usage_type` VARCHAR(30) NOT NULL DEFAULT \'\',
+			`is_free_email` CHAR(2) NOT NULL DEFAULT \'\',
+			`is_new_domain_name` CHAR(2) NOT NULL DEFAULT \'\',
+			`is_proxy_ip_address` CHAR(2) NOT NULL DEFAULT \'\',
+			`is_bin_found` CHAR(2) NOT NULL DEFAULT \'\',
+			`is_bin_country_match` CHAR(2) NOT NULL DEFAULT \'\',
+			`is_bin_name_match` CHAR(2) NOT NULL DEFAULT \'\',
+			`is_bin_phone_match` CHAR(2) NOT NULL DEFAULT \'\',
+			`is_bin_prepaid` CHAR(2) NOT NULL DEFAULT \'\',
+			`is_address_ship_forward` CHAR(2) NOT NULL DEFAULT \'\',
+			`is_bill_ship_city_match` CHAR(2) NOT NULL DEFAULT \'\',
+			`is_bill_ship_state_match` CHAR(2) NOT NULL DEFAULT \'\',
+			`is_bill_ship_country_match` CHAR(2) NOT NULL DEFAULT \'\',
+			`is_bill_ship_postal_match` CHAR(2) NOT NULL DEFAULT \'\',
+			`is_ip_blacklist` CHAR(2) NOT NULL DEFAULT \'\',
+			`is_email_blacklist` CHAR(2) NOT NULL DEFAULT \'\',
+			`is_credit_card_blacklist` CHAR(2) NOT NULL DEFAULT \'\',
+			`is_device_blacklist` CHAR(2) NOT NULL DEFAULT \'\',
+			`is_user_blacklist` CHAR(2) NOT NULL DEFAULT \'\',
+			`flp_score` CHAR(3) NOT NULL DEFAULT "0",
+			`flp_distribution` CHAR(3) NOT NULL DEFAULT \'\',
+			`flp_status` CHAR(10) NOT NULL DEFAULT \'\',
+			`flp_rules` VARCHAR(255) NOT NULL DEFAULT \'\',
+			`flp_id` CHAR(15) NOT NULL DEFAULT \'\',
+			`flp_error_code` CHAR(3) NOT NULL DEFAULT \'\',
+			`flp_message` VARCHAR(50) NOT NULL DEFAULT \'\',
+			`flp_credits` VARCHAR(10) NOT NULL DEFAULT "0",
+			`api_key` CHAR(32) NOT NULL DEFAULT \'\',
+			`is_blacklisted` CHAR(1) NOT NULL DEFAULT "0",
+			`is_phone_verified` VARCHAR(100) NOT NULL DEFAULT "0",
+			INDEX `id_order` (`id_order`)
+		) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8;') &&
+		Db::getInstance()->Execute('CREATE TABLE IF NOT EXISTS `' . _DB_PREFIX_ . 'flp_order_ip` (
+			`id_cart` INT NOT NULL,
+			`ip` VARCHAR(39) NOT NULL,
+			PRIMARY KEY (`id_cart`)
+		) ENGINE=' . _MYSQL_ENGINE_ . ' DEFAULT CHARSET=utf8;');
+	}
+
+	private function registerHooks()
+	{
+		return
+			$this->registerHook('actionCartSave') &&
+			$this->registerHook('actionValidateOrder') &&
+			$this->registerHook('displayAdminOrder') &&
+			$this->registerHook('displayFooter');
 	}
 
 	private function feedback($action, $id, $note = '')
@@ -634,3 +648,4 @@ class FraudLabsPro extends Module
 		return hash('sha256', $hash);
 	}
 }
+
