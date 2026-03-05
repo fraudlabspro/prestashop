@@ -32,7 +32,7 @@
 <div id="module-config">
     <div class="panel">
       <h3><i class="icon-cogs"></i> {l s='Settings' d='Modules.FraudLabsPro.Admin'}</h3>
-      <form action="{$current_url}" method="post" class="form-horizontal">
+      <form action="{$current_url|escape:'htmlall':'UTF-8'}" method="post" class="form-horizontal">
         <div class="form-group">
           <label class="control-label col-md-3">{l s='Enabled' d='Modules.FraudLabsPro.Admin'}</label>
           <div class="col-md-9">
