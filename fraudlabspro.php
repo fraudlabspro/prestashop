@@ -1,7 +1,7 @@
 <?php
 
 /*
-* 2013-2025 FraudLabs Pro
+* 2013-2026 FraudLabs Pro
 *
 * Permission is hereby granted, free of charge, to any person obtaining a copy of this software
 * and associated documentation files (the "Software"), to deal in the Software without restriction,
@@ -42,7 +42,7 @@ class FraudLabsPro extends Module
 	{
 		$this->name = 'fraudlabspro';
 		$this->tab = 'payment_security';
-		$this->version = '2.4.2';
+		$this->version = '2.5.0';
 		$this->author = 'FraudLabs Pro';
 		$this->emailSupport = 'support@fraudlabspro.com';
 		$this->module_key = 'cdb22a61c7ec8d1f900f6c162ad96caa';
@@ -312,6 +312,7 @@ class FraudLabsPro extends Module
 					'ip'              => $ip,
 					'first_name'      => $address_invoice->firstname,
 					'last_name'       => $address_invoice->lastname,
+					'bill_to'         => $address_invoice->company,
 					'bill_city'       => $address_invoice->city,
 					'bill_state'      => $bill_state,
 					'bill_country'    => Country::getIsoById((int) $address_invoice->id_country),
