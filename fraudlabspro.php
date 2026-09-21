@@ -267,7 +267,7 @@ class FraudLabsPro extends Module
 
 	public function hookActionValidateOrder($params)
 	{
-		if (!Configuration::get('PS_SHOP_ENABLE') || !Configuration::get('FLP_API_KEY') || !Configuration::get('FLP_ENABLED')) {
+		if (!Configuration::get('PS_SHOP_ENABLE') || !Configuration::get('FLP_API_KEY') || !Configuration::get('FLP_IS_ENABLED')) {
 			return;
 		}
 
@@ -649,4 +649,5 @@ class FraudLabsPro extends Module
 		return hash('sha256', $hash);
 	}
 }
+
 
