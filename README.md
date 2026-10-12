@@ -8,7 +8,7 @@ Learn more about our fraud validation capabilities on the [FraudLabs Pro Feature
 
 The fraud prevention module is free to use, allowing you to validate up to 500 orders per month.
 
-[Sign Up for the Free Micro Plan](https://www.fraudlabspro.com/checkout-micro)
+[Sign Up For Free Micro Plan](https://www.fraudlabspro.com/checkout-micro)
 
 ### Installation
 
